@@ -1,0 +1,66 @@
+.tagLogin{
+    display:flex;
+    position: absolute;
+      right: 0px;
+      bottom: 11px;
+      border-top:2rem solid #F3F0EB;
+      border-bottom:1rem solid #F3F0EB;
+      border-left:1rem solid #F3F0EB;
+      border-radius: 0 0 0 2.25rem ;
+      background-color: #F3F0EB;
+  }
+.tagLogin::after {
+    width: 2.5rem;
+    height: 2.5rem;
+    content: "";
+    position: absolute;
+    background-color: #2d311c;
+    top: -1.595rem;
+    left: -55.8px;
+    border-top-right-radius: 8rem;
+    border-bottom-left-radius: 10rem;
+
+}
+  
+  .tagLogin::before {
+    width: 2rem;
+    height: 2rem;
+    content: "";
+    position: absolute;
+    background-color: #f3f0eb;
+    top: -1.595rem;
+    left: -39px;
+    border-top-right-radius: 0.625rem;
+    
+  }
+  
+  
+  .curve_oneLogin, .curve_twoLogin{
+    width:1.25rem;
+    height:1.25rem;
+    content:"";
+    position:absolute;
+  
+  }
+  .curve_oneLogin {
+    height: 2.5rem;
+    width: 2.5rem;
+    border-bottom-left-radius: 10rem;
+    background-color: #2d311c;
+    right: 0%;
+    bottom: -1.8rem;
+    border-top-right-radius: 6.625rem;
+    z-index: 2;
+}
+  .curve_twoLogin {
+    z-index: 1;
+      width: 3rem;
+      height: 3.1rem;
+      background-color: #f3f0eb;
+      right: -1%;
+      bottom: -1.5rem;
+      border-top-right-radius: 0.625rem;
+    border-bottom-left-radius: 10rem;
+      
+  }
+  

@@ -1,0 +1,118 @@
+.tag{
+  display:flex;
+    position: absolute;
+    right: -9px;
+    bottom: -9px;
+    border-top:0.5rem solid #F3F0EB;
+    border-left:0.5rem solid #F3F0EB;
+    border-radius: 2.25rem 0 0 0 ;
+    background-color: #F3F0EB;
+}
+.tag::after {
+  width: 2.175rem;
+  height: 2.175rem;
+  content: "";
+  position: absolute;
+  background-color: #ffffff;
+  top: -2.695rem;
+  right: 8.55px;
+  border-bottom-right-radius: 2rem;
+}
+
+.tag::before {
+  width: 2rem;
+  height: 2rem;
+  content: "";
+  position: absolute;
+  background-color: #f3f0eb;
+  right: 0.5rem;
+  top: -2.1rem;
+  border-bottom-right-radius: 0.625rem;
+}
+
+
+.curve_one, .curve_two{
+  width:1.25rem;
+  height:1.25rem;
+  content:"";
+  position:absolute;
+
+}
+.curve_one {
+    height: 3rem;
+    width: 3rem;
+    background-color: #ffffff;
+    left: 61.5%;
+    bottom: 0rem;
+    border-bottom-right-radius: 6.625rem;
+    z-index: 2;
+}
+.curve_two {
+  z-index: 1;
+    width: 3rem;
+    height: 3.1rem;
+    background-color: #f3f0eb;
+    left: 63%;
+    bottom: -0.5rem;
+    border-bottom-right-radius: 0.625rem;
+}
+
+/* Agri */
+.tagAgri{
+  display:flex;
+    position: absolute;
+    right: -20.7px;
+    bottom: -7px;
+    border-top: 0.5rem solid transparent; 
+    border-left:0.5rem solid transparent;
+    border-radius: 2.25rem 0 0 0 ;
+    background-image: url("../../assets//IconHomePage/SectionCNC1.PNG");
+}
+.tagAgri::after {
+  width: 2.175rem;
+  height: 2.175rem;
+  content: "";
+  position: absolute;
+  top: -2.69rem;
+  right: 8.59px;
+  border-bottom-right-radius: 2rem;
+  background-color: WHITE;
+}
+
+.tagAgri::before {
+  width: 2.2rem;
+  height: 2.4rem;
+  content: "";
+  position: absolute;
+  background-image: url(../../assets//IconHomePage/SectionCNC1.PNG);
+  right: 0rem;
+  top: -2.5rem;
+  border-bottom-right-radius:0.625rem;
+}
+
+
+.curve_oneAgri, .curve_twoAgri{
+  width:1.25rem;
+  height:1.25rem;
+  content:"";
+  position:absolute;
+
+}
+.curve_oneAgri {
+  height: 3rem;
+  width: 3rem;
+  background-color: #ffffff;
+  left: 62.6%;
+  bottom: -0.07rem;
+  border-bottom-right-radius: 5.625rem;
+  z-index: 2;
+}
+.curve_twoAgri {
+    z-index: 1;
+    width: 3rem;
+    height: 3.1rem; 
+     background-image: url(../../assets//IconHomePage/SectionCNC1.PNG);
+    left: 63%;
+    bottom: -0.5rem;
+    border-bottom-right-radius: 0.625rem;
+}
