@@ -15,6 +15,7 @@ import { Calendar } from 'primereact/calendar';
 import { RadioButton } from "primereact/radiobutton";
 import HSReport from "../Class-report/HerdsReport";
 import StatisticsPanel from "../../components/StatisticsPanel/StatisticsPanel"
+import AttendanceTable from '../../components/attendanceTable/AttendanceTable';
 
 
 interface Product {
@@ -53,6 +54,7 @@ export default function ProductsDemo() {
     AttendanceService.getAttendance()
       .then((data) => setProducts(data));
   }, []);
+
   const openNew = () => {
     setProduct(emptyProduct);
     setSubmitted(false);
@@ -217,6 +219,8 @@ export default function ProductsDemo() {
         <StatisticsPanel />
       </div>
       <div className="mb-5">
+        <AttendanceTable />
+
         <DataTable className="p-2 bg-[#F3F7F5] rounded-[20px]" ref={dt} value={products} selection={selectedProducts}
           onSelectionChange={(e) => {
             if (Array.isArray(e.value)) {

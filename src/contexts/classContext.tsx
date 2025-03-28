@@ -31,8 +31,24 @@ export const ClassProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             try {
                 const response = await fetch(`http://localhost:8000/classes/${currentUser?.userId}`);
                 const data: oneClass[] = await response.json();
+                const defaultClass = {
+                    class_id: "0",
+                    class_name: "Tất cả lớp học",
+                    course_id: '0',
+                    course_name: "khoá học"
+                }
+                if (data && data.length > 0) {
+                    data.splice(0, 0, defaultClass);
+                    setClasses(data);
+                    setSelectedClass(defaultClass);
+
+                }
+                else {
+                    setClasses(data);
+                }
                 console.log('data', data)
-                setClasses(data);
+
+
             } catch (error) {
                 console.error("Error fetching:", error);
             }
