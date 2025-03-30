@@ -1,12 +1,9 @@
 import { useState } from "react";
 import BarChartComponent from "../../components/bar-chart/BarChartComponent";
-
 import TimelineSelector from "../../components/timeline-selector/TimelineSelector";
-
 
 const HerdsReport = () => {
   const [filterType, setFilterType] = useState<"year" | "month" | "week">("year");
-
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
@@ -32,10 +29,12 @@ const HerdsReport = () => {
           title="Tỉ lệ điểm danh"
           filterType={filterType}
           hasIsolation={true}
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+          selectedWeek={selectedWeek}
         />
       </div>
     </div>
-
   );
 };
 

@@ -176,9 +176,10 @@ const AttendancePivotDataTable: React.FC = () => {
                     url += `&class_id=${selectedClass?.class_id}`;
                 }
                 const response = await fetch(url);
-                const data: AttendanceItem[] = await response.json();
+                const data: AttendanceItem[] | null = await response.json();
+                const validData = data || [];
                 console.log("Attendance data", data);
-                const result: PivotResult = transformAttendanceToPivot(data);
+                const result: PivotResult = transformAttendanceToPivot(validData);
                 setDates(result.dates);
                 setPivotData(result.pivotData);
             } catch (error) {

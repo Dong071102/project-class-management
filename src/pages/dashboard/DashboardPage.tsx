@@ -226,7 +226,6 @@ export default function ProductsDemo() {
 
 
       <div className="mb-5">
-        <AttendanceChart />
         <HSReport />
       </div>
 

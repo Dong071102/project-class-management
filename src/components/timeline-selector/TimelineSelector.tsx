@@ -51,9 +51,10 @@ const TimelineSelector: React.FC<TimelineSelectorProps> = ({
 
 
       <select className="px-3 py-2 border border-gray-300 rounded-[4px] text-gray-500 bg-white" value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
-        {Array.from({ length: 5 }, (_, i) => 2024 - i).map((year) => (
+        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((year) => (
           <option key={year} value={year}>{year}</option>
         ))}
+
       </select>
 
       {filterType !== "year" && (
