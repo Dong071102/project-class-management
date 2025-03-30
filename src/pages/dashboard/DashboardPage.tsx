@@ -16,6 +16,7 @@ import { RadioButton } from "primereact/radiobutton";
 import HSReport from "../Class-report/HerdsReport";
 import StatisticsPanel from "../../components/StatisticsPanel/StatisticsPanel"
 import AttendanceTable from '../../components/attendanceTable/AttendanceTable';
+import AttendanceChart from '../../components/bar-chart/chart';
 
 
 interface Product {
@@ -171,7 +172,7 @@ export default function ProductsDemo() {
       </React.Fragment>
     );
   };
-//============================
+  //============================
   const header = (
     <div className="flex flex-wrap lign-items-center justify-between">
       <div className="text-left flex flex-wrap gap-10 align-items-center justify-between">
@@ -220,106 +221,12 @@ export default function ProductsDemo() {
       </div>
       <div className="mb-5">
         <AttendanceTable />
-
-        <DataTable className="p-2 bg-[#F3F7F5] rounded-[20px]" ref={dt} value={products} selection={selectedProducts}
-          onSelectionChange={(e) => {
-            if (Array.isArray(e.value)) {
-              setSelectedProducts(e.value);
-            }
-          }}
-          sortIcon={(options) => options.order === 1 ? <FiChevronUp /> : <FiChevronDown />}
-          dataKey="id" paginator rows={10} rowsPerPageOptions={[5, 10, 25]}
-          paginatorTemplate=" PrevPageLink PageLinks NextPageLink  RowsPerPageDropdown"
-          globalFilter={globalFilter} header={header}
-          selectionMode="multiple" scrollable scrollHeight='100vh' virtualScrollerOptions={{ itemSize: 46 }} tableStyle={{ minWidth: '50rem' }}>
-          <Column className="bg-[#F3F7F5]" selectionMode="multiple" exportable={false}></Column>
-          <Column className="bg-[#F3F7F5]" field="studentId" header="MSSV" sortable style={{ minWidth: '1rem' }}></Column>
-          <Column className="bg-[#F3F7F5]" field="fullName" header="Họ tên" sortable style={{ minWidth: '4rem' }}></Column>
-          <Column className="bg-[#F3F7F5]" field="className" header="Lớp học" sortable style={{ minWidth: '4rem' }}></Column>
-          <Column className="bg-[#F3F7F5]" field="attendanceDate" header="Điểm danh ngày" sortable ></Column>
-          <Column className="bg-[#F3F7F5]" field="attendanceStatus" header="Trạng thái" sortable style={{ minWidth: '4rem' }}></Column>
-          <Column className="bg-[#F3F7F5]" field="totalAttendanceDays" header="Tổng ngày" sortable style={{ minWidth: '4rem' }}></Column>
-          <Column className="bg-[#F3F7F5]" header="Thao tác" body={actionBodyTemplate} exportable={false} style={{ minWidth: '5rem' }}></Column>
-
-        </DataTable>
       </div>
 
-      <Dialog visible={productDialog} style={{ width: '45rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Thêm mới/Chỉnh sửa" modal className="p-fluid" footer={productDialogFooter} onHide={hideDialog}>
-        <p className="mb-4 text-black">Quản lý điểm danh</p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-          <div className="field">
-            <label htmlFor="studentId" className="font-normal">
-              Thông tin học sinh
-            </label>
-            <label htmlFor="fullName" className="font-normal">  MSSV </label>
-            <InputText id="studentId" value={product.studentId} onChange={(e) => onInputChange(e, 'studentId')} required
-              autoFocus className={classNames({ 'p-invalid': submitted && !product.studentId })}
-            />
-            {submitted && !product.studentId && <small className="p-error">studentId is required.</small>}
-          </div>
 
-          <div className="field ">
-            <label htmlFor="fullName" className="font-normal">  Họ và tên </label>
-            <InputText id="fullName" value={product.fullName} onChange={(e) => onInputChange(e, 'fullName')} required autoFocus className={classNames({ 'p-invalid': submitted && !product.fullName })}
-            />
-            {submitted && !product.fullName && <small className="p-error">fullName is required.</small>}
-          </div>
-
-
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-          <div className="field">
-            <label htmlFor="attendanceDate" className="font-normal">Thời gian điểm danh</label>
-            <Calendar id="attendanceDate" showIcon
-            />
-          </div>
-
-
-        </div>
-
-        <div className="field">
-          <label className="font-normal">Trạng thái</label>
-          <div className="flex gap-3 mt-2">
-            <div className="flex items-center">
-              <RadioButton inputId="statusPresent" value="Có mặt"
-                onChange={() => onStatusChange("Có mặt")} checked={product.attendanceStatus === "Có mặt"} />
-              <label htmlFor="statusPresent" className="ml-2">Có mặt</label>
-            </div>
-
-            <div className="flex items-center">
-              <RadioButton inputId="statusLate" value="Đi trễ"
-                onChange={() => onStatusChange("Đi trễ")} checked={product.attendanceStatus === "Đi trễ"} />
-              <label htmlFor="statusLate" className="ml-2">Đi trễ</label>
-            </div>
-
-            <div className="flex items-center">
-              <RadioButton inputId="statusAbsent" value="Vắng"
-                onChange={() => onStatusChange("Vắng")} checked={product.attendanceStatus === "Vắng"} />
-              <label htmlFor="statusAbsent" className="ml-2">Vắng</label>
-            </div>
-          </div>
-        </div>
-        <div className="field ">
-          <label htmlFor="attendanceStatus" className="font-normal">
-            Ghi chú
-          </label>
-          <InputTextarea id="attendanceStatus" value={product.className} onChange={(e) => onInputTextAreaChange(e, 'className')} rows={4} />
-        </div>
-      </Dialog>
-      <Dialog visible={deleteProductDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Thông báo" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
-        <div className="confirmation-content flex item-center ">
-          <FaExclamationTriangle className="text-[#FF0000] mr-3" style={{ fontSize: '2rem' }} />
-          {product && (
-            <span className="mt-3">
-              Bạn có chắc chắn muốn xóa <b>{product.fullName}</b>?
-            </span>
-          )}
-        </div>
-
-      </Dialog>
 
       <div className="mb-5">
+        <AttendanceChart />
         <HSReport />
       </div>
 

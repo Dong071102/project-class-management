@@ -14,7 +14,7 @@ const HerdsReport = () => {
   return (
     <div className="bg-[#F3F7F5] rounded-[16px] p-5">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl">Tỉ lệ sinh viên đi học</h1>
+        <h1 className="text-2xl">Tỉ lệ điểm danh</h1>
         <TimelineSelector
           filterType={filterType}
           setFilterType={setFilterType}
@@ -26,19 +26,17 @@ const HerdsReport = () => {
           setSelectedWeek={setSelectedWeek}
         />
       </div>
-      
+
       <div className="flex flex-col gap-y-5">
         <BarChartComponent
           title="Tỉ lệ điểm danh"
           filterType={filterType}
           hasIsolation={true}
-       
         />
       </div>
     </div>
-    
+
   );
 };
 
-  export default HerdsReport;
-  
+export default HerdsReport;

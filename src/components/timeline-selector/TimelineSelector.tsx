@@ -3,8 +3,6 @@ import React from "react";
 interface TimelineSelectorProps {
   filterType: "week" | "month" | "year";
   setFilterType: (type: "week" | "month" | "year") => void;
-  selectedAnimal: string;
-  setSelectedAnimal: (animal: string) => void;
   selectedYear: number;
   setSelectedYear: (year: number) => void;
   selectedMonth: number | null;
@@ -16,8 +14,6 @@ interface TimelineSelectorProps {
 const TimelineSelector: React.FC<TimelineSelectorProps> = ({
   filterType,
   setFilterType,
-  selectedAnimal,
-  setSelectedAnimal,
   selectedYear,
   setSelectedYear,
   selectedMonth,
@@ -29,38 +25,30 @@ const TimelineSelector: React.FC<TimelineSelectorProps> = ({
     <div className="flex flex-wrap gap-4 mb-4">
       <div className="flex bg-white border border-gray-300 rounded-full p-1 w-fit">
         <button
-          className={`px-4 py-2 rounded-full transition-colors ${
-            filterType === "week" ? "bg-green-100 text-green-700 font-semibold" : "text-gray-500"
-          }`}
+          className={`px-4 py-2 rounded-full transition-colors ${filterType === "week" ? "bg-green-100 text-green-700 font-semibold" : "text-gray-500"
+            }`}
           onClick={() => setFilterType("week")}
         >
           Theo tuần
         </button>
 
         <button
-          className={`px-4 py-2 rounded-full transition-colors ${
-            filterType === "month" ? "bg-green-100 text-green-700 font-semibold" : "text-gray-500"
-          }`}
+          className={`px-4 py-2 rounded-full transition-colors ${filterType === "month" ? "bg-green-100 text-green-700 font-semibold" : "text-gray-500"
+            }`}
           onClick={() => setFilterType("month")}
         >
           Theo tháng
         </button>
 
         <button
-          className={`px-4 py-2 rounded-full transition-colors ${
-            filterType === "year" ? "bg-green-100 text-green-700 font-semibold" : "text-gray-500"
-          }`}
+          className={`px-4 py-2 rounded-full transition-colors ${filterType === "year" ? "bg-green-100 text-green-700 font-semibold" : "text-gray-500"
+            }`}
           onClick={() => setFilterType("year")}
         >
           Theo năm
         </button>
       </div>
-      
-      <select className="px-3 py-2 border border-gray-300 rounded-[4px] text-gray-500 bg-white" value={selectedAnimal} onChange={(e) => setSelectedAnimal(e.target.value)}>
-        <option value="Cừu">Cừu</option>
-        <option value="Dê">Dê</option>
-        <option value="Lợn">Lợn</option>
-      </select>
+
 
       <select className="px-3 py-2 border border-gray-300 rounded-[4px] text-gray-500 bg-white" value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
         {Array.from({ length: 5 }, (_, i) => 2024 - i).map((year) => (

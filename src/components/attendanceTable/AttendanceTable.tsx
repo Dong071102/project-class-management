@@ -15,6 +15,8 @@ import { Button } from "primereact/button";
 import { FaExclamationTriangle } from "react-icons/fa";
 import { InputTextarea } from "primereact/inputtextarea";
 import { format } from "date-fns";
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 // Định nghĩa kiểu AttendanceItem ban đầu
 export interface AttendanceItem {
@@ -32,6 +34,7 @@ export interface AttendanceItem {
     attendance_time: string; // "0001-01-01T00:00:00Z", ...
     start_time: string;      // "2025-03-28T20:00:00Z", ...
     note: string;
+    evidence_image_url: string | null;
 }
 
 export interface LateInfo {
@@ -45,7 +48,7 @@ export interface PivotedStudent {
     fullName: string;
     className: string;
     courseName: string;
-    schedule_id: string;
+    // schedule_id: string;
     course_id: string;
 
     // Các cột động: key là ngày, giá trị có thể là đối tượng LateInfo hoặc đơn giản là một string (nếu status khác "late")
@@ -85,28 +88,39 @@ export function transformAttendanceToPivot(attendanceData: AttendanceItem[]): Pi
         if (!studentMap.has(item.student_id)) {
             studentMap.set(item.student_id, {
 
-
                 id: item.student_id,
-                attendance_id: item.attendance_id,
+                // attendance_id: item.attendance_id,
                 studentId: item.student_code,
                 fullName: `${item.last_name} ${item.first_name}`,
                 className: item.class_name,
                 courseName: item.course_name,
-                schedule_id: item.schedule_id, // thêm dòng này
-
+                // schedule_id: item.schedule_id, // thêm dòng này
                 course_id: item.course_id,     // nếu cần dùng
                 start_time: item.start_time    // nếu cần gửi hoặc hiển thị
             });
         }
         const pivotStudent = studentMap.get(item.student_id);
+        // console.log('pivotStudent,', pivotStudent)câp
         if (pivotStudent) {
+            pivotStudent
             if (item.status === "late") {
                 // Tính số giờ trễ: hiệu số giữa attendance_time và start_time
                 const diffMs = new Date(item.attendance_time).getTime() - new Date(item.start_time).getTime();
                 const diffHours = diffMs / (1000 * 60);
-                pivotStudent[dateKey] = { status: item.status, lateHours: diffHours };
+                pivotStudent[dateKey] = {
+                    status: item.status, lateHours: diffHours,
+                    schedule_id: item.schedule_id,
+                    attendance_id: item.attendance_id,
+                    evidence_image_url: item.evidence_image_url
+                };
             } else {
-                pivotStudent[dateKey] = { status: item.status };
+                pivotStudent[dateKey] = {
+                    status: item.status,
+                    schedule_id: item.schedule_id,
+                    attendance_id: item.attendance_id,
+                    evidence_image_url: item.evidence_image_url
+
+                };
             }
         }
     });
@@ -119,6 +133,7 @@ export function transformAttendanceToPivot(attendanceData: AttendanceItem[]): Pi
         dates: datesArray,
         pivotData: Array.from(studentMap.values())
     };
+
 }
 
 // Hàm chuyển đổi status sang tiếng Việt
@@ -152,7 +167,7 @@ const AttendancePivotDataTable: React.FC = () => {
     const toast = useRef<Toast>(null);
     const [submitted, setSubmitted] = useState<boolean>(false);
     const [productDialog, setProductDialog] = useState<boolean>(false);
-
+    const [importExportDialog, setImportExportDialog] = useState(false);
     useEffect(() => {
         const fetchAttendanceDetails = async () => {
             try {
@@ -176,9 +191,6 @@ const AttendancePivotDataTable: React.FC = () => {
 
         fetchAttendanceDetails();
     }, [selectedClass, currentUser]);
-    // Cập nhật trạng thái tự động khi chọn ngày mới
-    // Tự động chọn ngày đầu tiên có dữ liệu điểm danh của học sinh
-    // Tự động chọn ngày đầu tiên có dữ liệu điểm danh của học sinh
     useEffect(() => {
         if (productDialog && product.id && pivotData.length > 0 && dates.length > 0) {
             const student = pivotData.find(p => p.id === product.id);
@@ -210,6 +222,7 @@ const AttendancePivotDataTable: React.FC = () => {
                     ...prev,
                     attendanceStatus: studentData[dateKey].status,
                     note: studentData[dateKey].note || ''
+
                 }));
             } else {
                 setProduct(prev => ({
@@ -238,6 +251,15 @@ const AttendancePivotDataTable: React.FC = () => {
     const hideDeleteProductDialog = () => {
         setDeleteProductDialog(false);
     };
+    const openImportExportDialog = () => {
+        setImportExportDialog(true);
+    };
+
+    // Hàm đóng Dialog
+    const hideImportExportDialog = () => {
+        setImportExportDialog(false);
+    };
+
 
     const saveProduct = () => {
         setSubmitted(true);
@@ -249,18 +271,22 @@ const AttendancePivotDataTable: React.FC = () => {
 
         const _products = [...pivotData];
         const _product = { ...product };
-
+        console.log('default_product', _product)
         // const dateKey = selectedDate.toISOString().split("T")[0];
         const dateKey = new Date(selectedDate).toLocaleDateString("vi-VN", {
             day: "2-digit",
             month: "2-digit",
             year: "numeric"
         });
+        console.log('datekey', dateKey)
+        console.log('_product[dateKey] status')
         _product[dateKey] = {
             status: _product.attendanceStatus,
-            note: _product.note
+            note: _product.note,
+            attendance_id: _product[dateKey].attendance_id, // thêm attendance_id cũ
+            schedule_id: _product[dateKey].schedule_id      // thêm schedule_id cũ
         };
-
+        console.log(' _product[dateKey]', _product[dateKey])
         if (!dates.includes(dateKey)) {
             setDates((prev) => [...prev, dateKey].sort((a, b) => new Date(a).getTime() - new Date(b).getTime()));
         }
@@ -271,32 +297,51 @@ const AttendancePivotDataTable: React.FC = () => {
                 ..._products[index],
                 [dateKey]: {
                     status: _product.attendanceStatus,
-                    note: _product.note
+                    note: _product.note,
+                    attendance_id: _product.attendance_id, // thêm attendance_id cũ
+                    schedule_id: _product.schedule_id,      // thêm schedule_id cũ
+                    evidence_image_url: _product.evidence_image_url
+
                 }
             };
 
+            console.log('_products[index]', _products[index])
             toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Chỉnh sửa thành công', life: 3000 });
         } else {
             _product.id = Math.random().toString().slice(2, 9);
             _products.push(_product);
             toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Tạo thành công', life: 3000 });
         }
-
+        console.log('_products', _products)
         setPivotData(_products);
         setProductDialog(false);
         setProduct(emtyStudent);
         setSelectedDate(null);
         const apiPayload = {
-            schedule_id: _product.schedule_id, // ✅ Lấy từ object product
+            schedule_id: _product[dateKey].schedule_id,
             student_id: _product.id,
-            attendance_id: crypto.randomUUID(),
-            status: _product.attendanceStatus,
+            attendance_id: _product[dateKey].attendance_id,
+            status: _product[dateKey].status,
             attendance_time: new Date().toISOString(),
-            note: _product.note || '',
-            evidence_image_url: null
+            note: _product[dateKey].note || '',
+            evidence_image_url: _product.evidence_image_url
         };
         console.log('apiPayload', apiPayload)
-
+        // console.log("product item", _products[apiPayload])
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/update-attendance`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(apiPayload)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Attendance updated:", data);
+            })
+            .catch(error => {
+                console.error("Error updating attendance:", error);
+            });
     };
 
 
@@ -377,30 +422,228 @@ const AttendancePivotDataTable: React.FC = () => {
             </React.Fragment>
         );
     };
+    // Hàm xử lý xuất Excel
+    const exportExcel = () => {
+        const headerMapping: Record<string, string> = {
+            studentId: "Mã sinh viên",
+            fullName: "Họ tên",
+            className: "Lớp",
+            courseName: "Môn học",
+            // start_time: "Thời gian bắt đầu",
+        };
+        // Tạo mảng exportData với cấu trúc cố định và điền giá trị cho các cột ngày
+        const exportData = pivotData.map((row, index) => {
+
+            const exportRow: any = {};
+            exportRow["STT"] = index + 1;
+            // Lặp qua các cột cố định theo mapping và gán giá trị tương ứng
+            Object.keys(headerMapping).forEach(key => {
+                exportRow[headerMapping[key]] = row[key];
+            })
+            // Giả sử dates là mảng các ngày (ví dụ: ["29/03/2025", "28/03/2025"])
+            dates.forEach(date => {
+                const cell = row[date];
+                // Nếu có dữ liệu, chuyển đổi theo kiểu mong muốn (nếu là object, chuyển thành chuỗi)
+                if (cell) {
+                    if (typeof cell === 'object') {
+                        exportRow[date] =
+                            cell.status === 'late'
+                                ? `${mapStatus(cell.status)} (${cell.lateHours} phút)`
+                                : mapStatus(cell.status);
+                    } else {
+                        exportRow[date] = cell;
+                    }
+                } else {
+                    // Nếu không có dữ liệu, gán giá trị mặc định
+                    exportRow[date] = 'Không có dữ liệu';
+                }
+            });
+            return exportRow;
+        });
+
+        // Tạo worksheet và workbook từ exportData
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Attendance');
+
+        // Ghi file Excel về máy
+        XLSX.writeFile(workbook, 'attendance.xlsx');
+        hideImportExportDialog()
+        // Thông báo thành công
+        toast.current?.show({
+            severity: 'success',
+            summary: 'Thành công',
+            detail: 'Xuất Excel thành công!',
+            life: 3000,
+        });
+    };
+
+    const importExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!selectedClass || selectedClass.class_id === "0") {
+            toast.current?.show({
+                severity: 'error',
+                summary: 'Lỗi',
+                detail: 'Vui lòng chọn lớp trước khi nhập dữ liệu.',
+                life: 3000,
+            });
+            hideImportExportDialog();
+
+            return; // Dừng lại, không cho phép import
+        }
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const arrayBuffer = evt?.target?.result;
+            if (!arrayBuffer) return;
+
+            try {
+                // Đọc file dưới dạng ArrayBuffer
+                const data = new Uint8Array(arrayBuffer as ArrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+
+                // Lấy dữ liệu dưới dạng mảng 2 chiều (header + rows)
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+                // console.log("Dữ liệu đọc được:", jsonData);
+                if (jsonData.length < 2) return; // Không có dữ liệu
+
+                const [headerRow, ...rows] = jsonData;
+
+                // Tạo mapping từ header Excel sang các key trong PivotedStudent
+                // Giả sử file Excel của bạn có header: STT, Mã sinh viên, Họ tên, Lớp, Môn học, <date1>, <date2>,...
+                const headerMapping: Record<string, string> = {
+                    "Mã sinh viên": "studentId",
+                    "Họ tên": "fullName",
+                    "Lớp": "className",
+                    "Môn học": "courseName"
+                    // Nếu file Excel có thêm các cột cố định khác (ví dụ: attendance_id, start_time) thì thêm ở đây nếu cần
+                };
+                // Các key cố định (không phải cột ngày) mà bạn muốn map
+                const fixedKeys = ["studentId", "fullName", "className", "courseName", "schedule_id", "course_id", "attendance_id", "start_time"];
+
+                // Chuyển rows thành mảng PivotedStudent
+                const importedData: PivotedStudent[] = rows.map((row: any[]) => {
+                    const obj: any = {};
+                    headerRow.forEach((header: string, index: number) => {
+                        // Bỏ qua cột STT
+                        if (header === "STT") return;
+                        // Nếu header có mapping thì dùng key được map, ngược lại giữ nguyên header
+                        const mappedKey = headerMapping[header] ? headerMapping[header] : header;
+                        obj[mappedKey] = row[index] ?? "";
+                    });
+                    return obj as PivotedStudent;
+                });
+
+                // Xác định các cột ngày: những key không thuộc fixedKeys
+                let importedDates = new Set<string>();
+                importedData.forEach(item => {
+                    Object.keys(item).forEach(key => {
+                        if (!fixedKeys.includes(key)) {
+                            importedDates.add(key);
+                        }
+                    });
+                });
+                // Sắp xếp các cột ngày theo định dạng dd/MM/yyyy (chuyển sang yyyy-MM-dd để so sánh)
+                const importedDatesArray = Array.from(importedDates).sort((a, b) => {
+                    const dateA = new Date(a.split("/").reverse().join("-")).getTime();
+                    const dateB = new Date(b.split("/").reverse().join("-")).getTime();
+                    return dateA - dateB;
+                });
+
+                // Cập nhật state: pivotData và dates sẽ được sử dụng để hiển thị DataTable
+                setPivotData(importedData);
+                setDates(importedDatesArray);
+
+                toast.current?.show({
+                    severity: 'success',
+                    summary: 'Thành công',
+                    detail: 'Nhập Excel thành công!',
+                    life: 3000,
+                });
+                // console.log('product', product)
+
+                hideImportExportDialog();
+            } catch (error) {
+                console.error("Lỗi đọc file:", error);
+                toast.current?.show({
+                    severity: 'error',
+                    summary: 'Lỗi',
+                    detail: 'Không thể đọc file Excel',
+                    life: 3000,
+                });
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    };
+
 
     // Header của DataTable với ô tìm kiếm
+    // const header = (
+    //     <div className="flex flex-wrap lign-items-center justify-between">
+    //         <div className="text-left flex flex-wrap gap-10 align-items-center justify-between">
+    //             <h1 className="m-0 text-2xl">Quản lý điểm danh</h1>
+    //             <div className="flex items-center gap-2 text-xs rounded-[16px] bg-white border border-[#E0E2E7] px-2 max-w-[340px]">
+    //                 <FiSearch className="text-[#278D45] w-5 h-5" />
+    //                 <input type="search" onInput={(e) => { const target = e.target as HTMLInputElement; setGlobalFilter(target.value); }} placeholder="Tìm kiếm..." className=" hidden sm:flex text-[#737791] text-sm font-normal w-[200px] p-2 bg-transparent outline-none" />
+    //                 <FiChevronDown className=" hidden sm:flex text-[#737791] w-5 h-5" />
+    //             </div>
+    //         </div>
+    //         <div className="flex gap-5">
+    //             <div onClick={openNew} className="flex gap-1 p-2 rounded-[16px] items-center justify-between text-white bg-[#3D6649] cursor-pointer hover:bg-green-900">
+    //                 <FiPlus size={18} />
+    //                 <p className="text-base font-normal">Nhập/Xuất Excel</p>
+    //             </div>
+    //             <div onClick={openNew} className="flex gap-1 p-2 rounded-[16px] items-center justify-between text-white bg-[#76BC6A] cursor-pointer hover:bg-green-600">
+    //                 <FiPlus size={18} />
+    //                 <p className="text-base font-normal">Thêm mới</p>
+    //             </div>
+    //         </div>
+
+    //     </div >
+    // );
+
     const header = (
         <div className="flex flex-wrap lign-items-center justify-between">
             <div className="text-left flex flex-wrap gap-10 align-items-center justify-between">
                 <h1 className="m-0 text-2xl">Quản lý điểm danh</h1>
                 <div className="flex items-center gap-2 text-xs rounded-[16px] bg-white border border-[#E0E2E7] px-2 max-w-[340px]">
                     <FiSearch className="text-[#278D45] w-5 h-5" />
-                    <input type="search" onInput={(e) => { const target = e.target as HTMLInputElement; setGlobalFilter(target.value); }} placeholder="Tìm kiếm..." className=" hidden sm:flex text-[#737791] text-sm font-normal w-[200px] p-2 bg-transparent outline-none" />
+                    <input
+                        type="search"
+                        onInput={(e) => {
+                            const target = e.target as HTMLInputElement;
+                            setGlobalFilter(target.value);
+                        }}
+                        placeholder="Tìm kiếm..."
+                        className=" hidden sm:flex text-[#737791] text-sm font-normal w-[200px] p-2 bg-transparent outline-none"
+                    />
                     <FiChevronDown className=" hidden sm:flex text-[#737791] w-5 h-5" />
                 </div>
             </div>
             <div className="flex gap-5">
-                <div onClick={openNew} className="flex gap-1 p-2 rounded-[16px] items-center justify-between text-white bg-[#3D6649] cursor-pointer hover:bg-green-900">
+                {/* Nút Import/Export */}
+                <div
+                    onClick={openImportExportDialog}
+                    className="flex gap-1 p-2 rounded-[16px] items-center justify-between text-white bg-[#3D6649] cursor-pointer hover:bg-green-900"
+                >
                     <FiPlus size={18} />
                     <p className="text-base font-normal">Nhập/Xuất Excel</p>
                 </div>
-                <div onClick={openNew} className="flex gap-1 p-2 rounded-[16px] items-center justify-between text-white bg-[#76BC6A] cursor-pointer hover:bg-green-600">
+
+                {/* Nút Thêm Mới */}
+                <div
+                    onClick={openNew}
+                    className="flex gap-1 p-2 rounded-[16px] items-center justify-between text-white bg-[#76BC6A] cursor-pointer hover:bg-green-600"
+                >
                     <FiPlus size={18} />
                     <p className="text-base font-normal">Thêm mới</p>
                 </div>
             </div>
-
-        </div >
+        </div>
     );
     const productDialogFooter = (
         <React.Fragment>
@@ -505,49 +748,19 @@ const AttendancePivotDataTable: React.FC = () => {
                     sortable
                     style={{ minWidth: "12rem" }}
                 ></Column>
-                {/* Các cột động theo ngày (start_date) */}
-                {/* {dates.map((date) => (
-                    <Column
-                        key={date}
-                        className="bg-[#F3F7F5]"
-                        field={date}
-                        header={date}
-                        sortable
-                        style={{ minWidth: "4rem" }}
-                        body={(rowData) => {
-                            const cellData = rowData[date];
-                            if (cellData && typeof cellData === "object") {
-                                if (cellData.status === "late") {
-                                    return (
-                                        <span className='text-[#fcbd2d]'>
-                                            {mapStatus(cellData.status)} ({cellData.lateHours?.toFixed()} phút)
-                                        </span>
-                                    );
-                                }
-                                else if (cellData.status === "absent") {
-                                    return <span className='text-[#f14871]'>{mapStatus(cellData.status)}</span>;
 
-                                }
-                                else {
-                                    return <span >{mapStatus(cellData.status)}</span>;
-
-                                }
-                            }
-                            return <span></span>;
-                        }}
-                    ></Column>
-                ))} */}
                 {dates.map((date) => (
                     <Column
                         key={date}
                         className="bg-[#F3F7F5]"
-                        field={`${date}_sort`} // ✅ dùng field phụ
+                        field={`${date}_sort`} // nếu bạn đang dùng field phụ, hoặc có thể dùng field={date} nếu phù hợp
                         header={date}
                         sortable
                         style={{ minWidth: "4rem" }}
                         body={(rowData) => {
                             const cellData = rowData[date];
                             if (cellData && typeof cellData === "object") {
+                                // Nếu là object (được tạo khi có dữ liệu từ API)
                                 if (cellData.status === "late") {
                                     return (
                                         <span className='text-[#fcbd2d]'>
@@ -559,11 +772,24 @@ const AttendancePivotDataTable: React.FC = () => {
                                 } else {
                                     return <span>{mapStatus(cellData.status)}</span>;
                                 }
+                            } else if (cellData && typeof cellData === "string") {
+                                // Nếu là chuỗi (dữ liệu từ Excel)
+                                if (cellData.toLowerCase().includes("vắng")) {
+                                    return <span className="text-[#F14871]">{cellData}</span>; // Màu đỏ cho "Vắng"
+                                } else if (cellData.toLowerCase().includes("có mặt")) {
+                                    return <span className="text-[#278D45]">{cellData}</span>; // Màu xanh lá cho "Có mặt"
+                                } else if (cellData.toLowerCase().includes("trễ")) {
+                                    return <span className="text-[#fcbd2d]">{cellData}</span>; // Màu cam cho "Trễ"
+                                }
+                                // Trường hợp khác
+                                return <span>{cellData}</span>;
                             }
+
                             return <span></span>;
                         }}
                     />
                 ))}
+
 
                 {/* Cột Thao tác */}
                 <Column
@@ -647,23 +873,6 @@ const AttendancePivotDataTable: React.FC = () => {
                         })}
 
 
-                        {/* <div className="flex items-center">
-                            <RadioButton inputId="statusPresent" value="Có mặt"
-                                onChange={() => onStatusChange("Có mặt")} checked={product.attendanceStatus === "Có mặt"} />
-                            <label htmlFor="statusPresent" className="ml-2">Có mặt</label>
-                        </div>
-
-                        <div className="flex items-center">
-                            <RadioButton inputId="statusLate" value="Đi trễ"
-                                onChange={() => onStatusChange("Đi trễ")} checked={product.attendanceStatus === "Đi trễ"} />
-                            <label htmlFor="statusLate" className="ml-2">Đi trễ</label>
-                        </div>
-
-                        <div className="flex items-center">
-                            <RadioButton inputId="statusAbsent" value="Vắng"
-                                onChange={() => onStatusChange("Vắng")} checked={product.attendanceStatus === "Vắng"} />
-                            <label htmlFor="statusAbsent" className="ml-2">Vắng</label>
-                        </div> */}
                     </div>
                 </div>
                 <div className="field ">
@@ -671,6 +880,47 @@ const AttendancePivotDataTable: React.FC = () => {
                         Ghi chú
                     </label>
                     <InputTextarea id="attendanceStatus" value={product.note} onChange={(e) => onInputTextAreaChange(e, 'note')} rows={4} />
+                </div>
+            </Dialog>
+            <Dialog
+                visible={importExportDialog}
+                style={{ width: '500px' }}
+                header="Nhập/Xuất Excel"
+                modal
+                onHide={hideImportExportDialog}
+            >
+
+
+
+                <div className="flex flex-col gap-4 items-center">
+                    <p>Vui lòng chọn tệp Excel để import hoặc xuất dữ liệu hiện tại ra Excel.</p>
+
+                    <div className='justify-center'>
+                        {/* Input file (ẩn) */}
+                        <input
+                            id="importExcel"
+                            type="file"
+                            accept=".xlsx, .xls"
+                            onChange={importExcel}
+                            className="hidden"
+                        />
+
+                        {/* Nút Import */}
+                        <label
+                            htmlFor="importExcel"
+                            className=" w-250 px-5 py-3 bg-[#278d45] text-white rounded  cursor-pointer hover:bg-green-800 transition-colors"
+                        >
+                            Nhập file Excel
+                        </label>
+                        <span className='p-5' />
+                        {/* Nút Export */}
+                        <button
+                            onClick={exportExcel}
+                            className=" px-6 py-3 bg-[#fbbd2f] text-white rounded  cursor-pointer hover:bg-[#fd9b04] transition-colors"
+                        >
+                            Xuất file Excel
+                        </button>
+                    </div>
                 </div>
             </Dialog>
             <Dialog visible={deleteProductDialog} style={{ width: '32rem' }} breakpoints={{ '960px': '75vw', '641px': '90vw' }} header="Thông báo" modal footer={deleteProductDialogFooter} onHide={hideDeleteProductDialog}>
