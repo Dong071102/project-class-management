@@ -40,8 +40,9 @@ const ClassSelector: React.FC = () => {
         isOpen && (
           <ul
             id="dropdown"
-            className="absolute w-full mt-1 bg-[#76bc6a] border rounded-[20px] p-1.5 text-white text-left"
+            className="absolute z-50 w-full mt-1 bg-[#76bc6a] border rounded-[20px] p-1.5 text-white text-left"
           >
+
             {classes.map((oclass) => (
               <li
                 key={oclass.class_id}

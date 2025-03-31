@@ -646,6 +646,7 @@ const AttendancePivotDataTable: React.FC = () => {
             </div>
         </div>
     );
+    
     const productDialogFooter = (
         <React.Fragment>
             <Button label="Thoát" outlined onClick={hideDialog} rounded />
