@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { format, startOfWeek, addDays, parse, getWeek, isBefore, isEqual, isAfter } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Button } from 'primereact/button';
@@ -122,8 +122,6 @@ const WeeklyScheduler: React.FC = () => {
 
         const start = parse(startTime, 'HH:mm', baseDate);
         const end = parse(endTime, 'HH:mm', baseDate);
-        console.log('start', start)
-        console.log('end', end)
 
         // ✅ Nếu end nhỏ hơn hoặc bằng start → cộng 1 ngày (qua đêm)
         if (end <= start) {
@@ -137,7 +135,6 @@ const WeeklyScheduler: React.FC = () => {
         // Số phút tính từ giờ bắt đầu của lịch
         const top = ((startMinutes - START_HOUR * 60) / 60) * HOUR_HEIGHT_PX;
         const height = ((endMinutes - startMinutes) / 60) * HOUR_HEIGHT_PX;
-        console.log('Start:', startTime, 'End:', endTime, 'Top:', top, 'Height:', height);
 
         return {
             top: `${Math.max(0, top)}px`,
@@ -352,8 +349,14 @@ const WeeklyScheduler: React.FC = () => {
         let start = parse(newSubject.startTime, 'HH:mm', baseDate);
         let end = parse(newSubject.endTime, 'HH:mm', baseDate);
 
-        if (end <= start) {
-            end = addDays(end, 1);
+        if (start >= end) {
+            toast.current?.show({
+                severity: 'error',
+                summary: 'Lỗi giờ học',
+                detail: 'Giờ bắt đầu phải nhỏ hơn giờ kết thúc.',
+                life: 3000
+            });
+            return;
         }
 
         const fullStart = new Date(Date.UTC(
@@ -502,6 +505,15 @@ const WeeklyScheduler: React.FC = () => {
             toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: error.message, life: 3000 });
         }
     };
+    const timeValidationMessage = useMemo(() => {
+        if (!newSubject.startTime || !newSubject.endTime) return null;
+
+        const base = new Date(2000, 0, 1);
+        const start = parse(newSubject.startTime, 'HH:mm', base);
+        const end = parse(newSubject.endTime, 'HH:mm', base);
+
+        return start >= end ? 'Giờ bắt đầu phải nhỏ hơn giờ kết thúc.' : null;
+    }, [newSubject.startTime, newSubject.endTime]);
 
 
     // --- Xử lý khi click vào ô giờ trống ---
@@ -691,7 +703,21 @@ const WeeklyScheduler: React.FC = () => {
 
                 {/* Dialog Thêm/Chỉnh Sửa Môn Học (không có trường chọn tòa nhà/phòng) */}
                 <Dialog
-                    header={editingSubjectId !== null ? "Chỉnh sửa Môn Học" : `Thêm Môn Học`}
+                    header={
+                        <div className="flex flex-col items-center">
+                            <span>
+                                {editingSubjectId !== null ? "Chỉnh sửa Môn Học" : "Thêm Môn Học"}
+                            </span>
+                            {selectedDateForNewSubject && (
+                                <span className="text-sm text-gray-600">
+                                    {format(selectedDateForNewSubject, "eeee, dd/MM/yyyy", { locale: vi })}
+                                </span>
+                            )}
+                        </div>
+
+
+
+                    }
                     visible={isDialogOpen}
                     style={{ width: 'min(90vw, 400px)' }}
                     modal
@@ -721,7 +747,8 @@ const WeeklyScheduler: React.FC = () => {
                             <label className="font-semibold mb-1 block">Lớp học *</label>
                             <Dropdown
                                 id="className"
-                                value={classes.find(cls => cls.class_id === newSubject.classId) || null}
+                                emptyMessage="Chưa có lớp học nào được thêm vào môn học này"
+                                value={(classes || []).find(cls => cls.class_id === newSubject.classId) || null}
                                 options={classes || []}
                                 optionLabel="class_name"
                                 onChange={(e) => {
@@ -756,6 +783,13 @@ const WeeklyScheduler: React.FC = () => {
                                     required
                                 />
                             </div>
+
+
+                        </div>
+                        <div>
+                            {timeValidationMessage && (
+                                <small style={{ color: 'red' }}>{timeValidationMessage}</small>
+                            )}
                         </div>
                         <div className="p-field">
                             <label className="font-semibold mb-1 block">Chủ đề</label>

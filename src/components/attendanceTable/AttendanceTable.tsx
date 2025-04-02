@@ -175,6 +175,7 @@ const AttendancePivotDataTable: React.FC = () => {
                 if (selectedClass?.class_id !== "0") {
                     url += `&class_id=${selectedClass?.class_id}`;
                 }
+                console.log('url,url', url)
                 const response = await fetch(url);
                 const data: AttendanceItem[] | null = await response.json();
                 const validData = data || [];
@@ -646,7 +647,7 @@ const AttendancePivotDataTable: React.FC = () => {
             </div>
         </div>
     );
-    
+
     const productDialogFooter = (
         <React.Fragment>
             <Button label="Thoát" outlined onClick={hideDialog} rounded />
