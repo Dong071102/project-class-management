@@ -40,7 +40,7 @@ export interface AttendanceRecord {
     evidence_image_url: string;
 }
 
-export default function StudentsDemo() {
+export default function StudentManager() {
     const emptyStudent: Student = {
         id: null,  // id của sinh viên
         studentCode: '', // mã sinh viên

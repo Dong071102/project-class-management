@@ -17,7 +17,7 @@ import HSReport from "../Class-report/HerdsReport";
 import StatisticsPanel from "../../components/StatisticsPanel/StatisticsPanel"
 import AttendanceTable from '../../components/attendanceTable/AttendanceTable';
 import AttendanceChart from '../../components/bar-chart/chart';
-import StudentsTable from '../../components/classStudentTable/StudentsTable';
+import StudentsTable from '../../components/classStudentTable/classStudent';
 
 
 interface Product {

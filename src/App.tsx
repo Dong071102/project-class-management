@@ -34,28 +34,26 @@ import Diseases from './pages/prev-pages/diseases/Diseases';
 import Treatments from './pages/prev-pages/treatments/Treatments';
 import { NotificationProvider } from "./contexts/NotificationContext";
 import NotificationContainer from "./components/NotificationContainer";
+import { FaBookOpenReader, FaCalendarDays } from 'react-icons/fa6';
+import StudentManager from './pages/studentManager/Student-Manger';
+import StudentsBasicTable from './components/classStudentTable/classStudent';
+import WeeklyScheduler from './pages/Scheduler/Scheduler';
 const queryClient = new QueryClient();
 const SIDEBAR_ITEMS = [
   { text: "Tổng quan", url: "/dashboard", icon: <HiMiniChartPie /> },
   {
-    text: "QL Vật nuôi",
-    url: "/herds",
-    icon: <MdOutlinePets />,
+    text: "QL sinh viên",
+    url: "/manager",
+    icon: <FaBookOpenReader />,
     subItems: [
-      { text: "Đàn", url: "/herds/manage" },
-      { text: "Phát hiện bất thường", url: "/herds/abnormal-detection" },
-      { text: "Báo cáo", url: "/herds/report" },
+      { text: "QL lớp học", url: "/manager/classes" },
+      { text: "QL sinh viên", url: "/manager/students" },
     ],
   },
   {
-    text: "KS Dịch bệnh",
-    url: "/epidemic",
-    icon: <MdSick />,
-    subItems: [
-      { text: "Hồ sơ theo dõi", url: "/epidemic/track-record" },
-      { text: "Kế hoạch điều trị", url: "/epidemic/treatment-plan" },
-      { text: "Báo cáo", url: "/epidemic/report" },
-    ],
+    text: "Thời khoá biểu",
+    url: "/schedule",
+    icon: <FaCalendarDays />,
   },
   {
     text: "QL Tài nguyên",
@@ -157,16 +155,16 @@ function App() {
           element: <Dashboard />,
         },
         {
-          path: "/herds/manage",
-          element: <Herds />,
+          path: "/manager/classes",
+          element: <StudentsBasicTable />,
         },
         {
-          path: "/herds/abnormal-detection",
-          element: <AbnormalDetection />,
+          path: "/manager/students",
+          element: <StudentManager />,
         },
         {
-          path: "/herds/report",
-          element: <HerdsReport />,
+          path: "/schedule",
+          element: <WeeklyScheduler />,
         },
         {
           path: "/epidemic/track-record",

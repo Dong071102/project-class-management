@@ -57,7 +57,7 @@ const StudentStatistics: React.FC = () => {
       try {
         let url = `http://localhost:8000/attendance-summary?lecturer_id=${currentUser?.userId}`;
         if (selectedClass?.class_id !== '0') {
-          
+
           url += `&class_id=${selectedClass?.class_id}`;
         }
         const response = await fetch(url);
