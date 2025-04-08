@@ -1,4 +1,4 @@
-import AbnormalDetectionCard from "../../components/card/AbnormalDetectionCard";
+import AbnormalDetectionCard from "../../components/card/AttendanceCard";
 import phvt from "../../assets/phvn.png";
 import phbt1 from "../../assets/phbt1.png";
 import BarnSelector, { Barn } from "../../components/classSelector/ClassSelector";

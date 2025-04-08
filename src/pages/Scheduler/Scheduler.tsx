@@ -213,7 +213,6 @@ const WeeklyScheduler: React.FC = () => {
             };
         });
     }
-
     useEffect(() => {
         if (selectedClassroom) {
             setLoadingSubjects(true);
@@ -224,10 +223,8 @@ const WeeklyScheduler: React.FC = () => {
             let url = `${import.meta.env.VITE_API_BASE_URL}/get-schedules?week_start=${weekStartStr}`;
 
             if (selectedClassroom.classroom_id === '0') {
-                // Nếu chọn "Tất cả lớp học", thay vào đó dùng lecturer_id
                 url += `&lecturer_id=${currentUser?.userId}`;
             } else {
-                // Nếu chọn lớp học cụ thể
                 url += `&classroom_id=${selectedClassroom.classroom_id}`;
             }
 
@@ -235,7 +232,12 @@ const WeeklyScheduler: React.FC = () => {
 
             fetch(url)
                 .then(response => response.json())
-                .then((data: ScheduleFetched[]) => {
+                .then((data) => {
+                    if (!Array.isArray(data)) {
+                        console.error("Dữ liệu lịch không hợp lệ:", data);
+                        setSubjects([]);
+                        return;
+                    }
                     const converted = convertSchedulesToSubjects(data, currentUser?.userId || '');
                     setSubjects(converted);
                     setLoadingSubjects(false);
@@ -339,6 +341,8 @@ const WeeklyScheduler: React.FC = () => {
             );
         });
     }
+
+
     const handleAddSubject = async () => {
         if (!newSubject.name || !newSubject.startTime || !newSubject.endTime || !selectedDateForNewSubject || !selectedClassroom || selectedClassroom.classroom_id === '0') {
             toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: 'Vui lòng nhập đầy đủ thông tin.', life: 3000 });
@@ -397,7 +401,8 @@ const WeeklyScheduler: React.FC = () => {
             });
 
             if (!response.ok) throw new Error('Lỗi khi thêm buổi học');
-
+            console.log("Added subject:", response);
+            console.log("Added subject successfully");
             const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
             const weekStartStr = format(weekStart, 'yyyy-MM-dd');
             let url = `${import.meta.env.VITE_API_BASE_URL}/get-schedules?week_start=${weekStartStr}`;
@@ -405,7 +410,12 @@ const WeeklyScheduler: React.FC = () => {
             else url += `&classroom_id=${selectedClassroom.classroom_id}`;
 
             const res = await fetch(url);
-            const data: ScheduleFetched[] = await res.json();
+            const data = await res.json();
+
+            if (!Array.isArray(data)) {
+                throw new Error('API không trả về danh sách lịch hợp lệ');
+            }
+
             setSubjects(convertSchedulesToSubjects(data, currentUser?.userId || ''));
 
             toast.current?.show({ severity: 'success', summary: 'Thành công', detail: 'Đã thêm lịch học.', life: 3000 });
@@ -414,6 +424,7 @@ const WeeklyScheduler: React.FC = () => {
             toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: err.message, life: 3000 });
         }
     };
+
 
 
 
@@ -427,6 +438,10 @@ const WeeklyScheduler: React.FC = () => {
         }
 
         const baseDate = new Date(2000, 0, 1);
+        const toLocalISOString = (date: Date) => {
+            return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString();
+        };
+
         let start = parse(newSubject.startTime, 'HH:mm', baseDate);
         let end = parse(newSubject.endTime, 'HH:mm', baseDate);
 
@@ -449,21 +464,23 @@ const WeeklyScheduler: React.FC = () => {
         }
 
         try {
+            console.log("Editing subject with ID:", editingSubjectId);
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/update-schedule/${editingSubjectId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     class_id: newSubject.classId,
                     classroom_id: selectedClassroom.classroom_id,
-                    start_time: fullStart.toISOString(),
-                    end_time: fullEnd.toISOString(),
+                    start_time: toLocalISOString(fullStart),
+                    end_time: toLocalISOString(fullEnd),
                     topic: newSubject.topic,
                     description: newSubject.description,
                 })
             });
 
             if (!response.ok) throw new Error('Lỗi khi cập nhật buổi học');
-
+            console.log("Updated subject:", response);
+            console.log("Updated subject successfully");
             const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
             const weekStartStr = format(weekStart, 'yyyy-MM-dd');
             let url = `${import.meta.env.VITE_API_BASE_URL}/get-schedules?week_start=${weekStartStr}`;
@@ -471,7 +488,12 @@ const WeeklyScheduler: React.FC = () => {
             else url += `&classroom_id=${selectedClassroom.classroom_id}`;
 
             const res = await fetch(url);
-            const data: ScheduleFetched[] = await res.json();
+            const data = await res.json();
+
+            if (!Array.isArray(data)) {
+                throw new Error('API không trả về danh sách lịch hợp lệ');
+            }
+
             setSubjects(convertSchedulesToSubjects(data, currentUser?.userId || ''));
 
             toast.current?.show({ severity: 'success', summary: 'Cập nhật', detail: 'Lịch học đã được cập nhật.', life: 3000 });
@@ -480,15 +502,48 @@ const WeeklyScheduler: React.FC = () => {
             toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: err.message, life: 3000 });
         }
     };
+    const refetchSchedules = async () => {
+        if (!selectedClassroom) return;
+
+        const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+        const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+
+        let url = `${import.meta.env.VITE_API_BASE_URL}/get-schedules?week_start=${weekStartStr}`;
+        if (selectedClassroom.classroom_id === '0') {
+            url += `&lecturer_id=${currentUser?.userId}`;
+        } else {
+            url += `&classroom_id=${selectedClassroom.classroom_id}`;
+        }
+
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (!Array.isArray(data)) {
+                throw new Error('API không trả về danh sách lịch hợp lệ');
+            }
+
+            const converted = convertSchedulesToSubjects(data, currentUser?.userId || '');
+            setSubjects(converted);
+        } catch (err: any) {
+            console.error("Lỗi khi tải lại lịch:", err);
+            toast.current?.show({
+                severity: 'error',
+                summary: 'Lỗi',
+                detail: err.message,
+                life: 3000
+            });
+        }
+    };
+
 
 
 
 
     // --- Xử lý xóa môn học ---
-
     const handleDeleteSubject = async () => {
-        if (!editingSubjectId) return;
-        console.log('editingSubjectId', editingSubjectId)
+        if (!editingSubjectId || !selectedClassroom) return;
+
         try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/delete-schedule/${editingSubjectId}`, {
                 method: 'DELETE'
@@ -496,15 +551,30 @@ const WeeklyScheduler: React.FC = () => {
 
             if (!response.ok) throw new Error('Lỗi khi xóa lịch học');
 
-            const updatedSubjects = subjects.filter(subject => subject.id !== editingSubjectId);
-            setSubjects(updatedSubjects);
+            // ✅ Tải lại toàn bộ lịch sau khi xóa
+            await refetchSchedules();
+            console.log("delete subject successfully");
 
-            toast.current?.show({ severity: 'success', summary: 'Đã xóa', detail: 'Lịch học đã được xóa.', life: 3000 });
-            hideDialog();
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Đã xóa',
+                detail: 'Lịch học đã được xóa.',
+                life: 3000
+            });
+
+            hideDialog(); // ẩn dialog
         } catch (error: any) {
-            toast.current?.show({ severity: 'error', summary: 'Lỗi', detail: error.message, life: 3000 });
+            toast.current?.show({
+                severity: 'error',
+                summary: 'Lỗi',
+                detail: error.message,
+                life: 3000
+            });
         }
     };
+
+
+
     const timeValidationMessage = useMemo(() => {
         if (!newSubject.startTime || !newSubject.endTime) return null;
 

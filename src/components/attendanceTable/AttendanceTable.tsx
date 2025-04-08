@@ -50,8 +50,6 @@ export interface PivotedStudent {
     courseName: string;
     // schedule_id: string;
     course_id: string;
-
-    // Các cột động: key là ngày, giá trị có thể là đối tượng LateInfo hoặc đơn giản là một string (nếu status khác "late")
     [key: string]: any;
 }
 
@@ -78,11 +76,14 @@ export function transformAttendanceToPivot(attendanceData: AttendanceItem[]): Pi
     const studentMap = new Map<string, PivotedStudent>();
 
     attendanceData.forEach((item) => {
-        const dateKey = new Date(item.start_time).toLocaleDateString("vi-VN", {
+        const startUTC = new Date(item.start_time);
+        startUTC.setHours(startUTC.getHours() - 7);  // Trừ 7h để về đúng UTC
+        const dateKey = startUTC.toLocaleDateString("vi-VN", {
             day: "2-digit",
             month: "2-digit",
             year: "numeric"
         });
+
         uniqueDates.add(dateKey);
 
         if (!studentMap.has(item.student_id)) {
@@ -105,7 +106,15 @@ export function transformAttendanceToPivot(attendanceData: AttendanceItem[]): Pi
             pivotStudent
             if (item.status === "late") {
                 // Tính số giờ trễ: hiệu số giữa attendance_time và start_time
-                const diffMs = new Date(item.attendance_time).getTime() - new Date(item.start_time).getTime();
+                // const diffMs = new Date(item.attendance_time).getTime() - new Date(item.start_time).getTime();
+                const attendanceTimeUTC = new Date(item.attendance_time);
+                attendanceTimeUTC.setHours(attendanceTimeUTC.getHours() - 7);
+
+                const startTimeUTC = new Date(item.start_time);
+                startTimeUTC.setHours(startTimeUTC.getHours() - 7);
+
+                const diffMs = attendanceTimeUTC.getTime() - startTimeUTC.getTime();
+
                 const diffHours = diffMs / (1000 * 60);
                 pivotStudent[dateKey] = {
                     status: item.status, lateHours: diffHours,
@@ -126,8 +135,9 @@ export function transformAttendanceToPivot(attendanceData: AttendanceItem[]): Pi
     });
 
     const datesArray = Array.from(uniqueDates).sort(
-        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+        (a, b) => new Date(b.split("/").reverse().join("-")).getTime() - new Date(a.split("/").reverse().join("-")).getTime()
     );
+
 
     return {
         dates: datesArray,

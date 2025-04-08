@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import AbnormalDetectionCard from "../card/AbnormalDetectionCard";
+import AbnormalDetectionCard from "../card/AttendanceCard";
 import BarnSelector, { Barn } from "../classSelector/ClassSelector";
 import { MdOutlinePets } from "react-icons/md";
 type CameraStatusProps = {

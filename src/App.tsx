@@ -7,7 +7,7 @@ import 'primereact/resources/themes/lara-light-indigo/theme.css';
 
 import { HiMiniChartPie } from "react-icons/hi2";
 import { MdOutlinePets, MdSick, MdAssignment } from "react-icons/md";
-import { BiSolidBarChartSquare } from "react-icons/bi";
+import { BiSolidBarChartSquare, BiSolidCctv } from "react-icons/bi";
 
 import Sidebar, { SidebarItem } from "./components/side-bar/Sidebar";
 import Header from "./components/header/Header";
@@ -38,6 +38,8 @@ import { FaBookOpenReader, FaCalendarDays } from 'react-icons/fa6';
 import StudentManager from './pages/studentManager/Student-Manger';
 import StudentsBasicTable from './components/classStudentTable/classStudent';
 import WeeklyScheduler from './pages/Scheduler/Scheduler';
+import AttendanceStream from './pages/attendancePage/attendanceStream';
+import HumanCouterPanel from './pages/humanCouterPage/HumanCouterPage';
 const queryClient = new QueryClient();
 const SIDEBAR_ITEMS = [
   { text: "Tổng quan", url: "/dashboard", icon: <HiMiniChartPie /> },
@@ -56,35 +58,12 @@ const SIDEBAR_ITEMS = [
     icon: <FaCalendarDays />,
   },
   {
-    text: "QL Tài nguyên",
-    url: "/resources",
-    icon: <BiSolidBarChartSquare />,
+    text: "Giám sát",
+    url: "/camera",
+    icon: <BiSolidCctv />,
     subItems: [
-      { text: "Nước", url: "/resources/water" },
-      { text: "Thức ăn", url: "/resources/food" },
-      { text: "Y tế", url: "/resources/medical" },
-      { text: "Báo cáo", url: "/resources/report" },
-    ],
-  },
-  {
-    text: "QL Công việc",
-    url: "/job",
-    icon: <MdAssignment />,
-    subItems: [
-      { text: "Công việc", url: "/job/manage" },
-      { text: "Báo cáo", url: "/job/report" },
-    ],
-  },
-  //Code prev
-  {
-    text: "QL Admin (Prev)",
-    url: "/admin",
-    icon: <MdAssignment />,
-    subItems: [
-      { text: "Nhóm vật nuôi", url: "/admin/categories" },
-      { text: "Đàn (pages old)", url: "/admin/old-herds" },
-      { text: "Bệnh", url: "/admin/diseases" },
-      { text: "Điều trị", url: "/admin/treatments" },
+      { text: "Điểm danh", url: "/camera/attendance" },
+      { text: "Giám sát", url: "/camera/recognition" },
     ],
   },
 
@@ -167,12 +146,12 @@ function App() {
           element: <WeeklyScheduler />,
         },
         {
-          path: "/epidemic/track-record",
-          element: <TrackRecord />,
+          path: "/camera/attendance",
+          element: <AttendanceStream />,
         },
         {
-          path: "/epidemic/treatment-plan",
-          element: <TreatmentPlan />,
+          path: "/camera/recognition",
+          element: <HumanCouterPanel />,
 
         },
         {
