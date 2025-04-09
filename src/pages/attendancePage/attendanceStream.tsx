@@ -155,6 +155,9 @@ const AttendancePanel = () => {
         setIsStreaming(false);  // Đặt lại trạng thái streaming
         connectWebSocket(selectedDate?.schedule_id || '');  // Gọi lại hàm để kết nối WebSocket
     };
+    function subtractHours(date: Date, hours: number): Date {
+        return new Date(date.getTime() - hours * 60 * 60 * 1000);
+    }
     const connectWebSocket = async (scheduleID: string) => {
         const canvas = document.getElementById("video-canvas") as HTMLCanvasElement | null;
         const fallbackImg = document.getElementById("fallback-image") as HTMLImageElement | null;
@@ -171,14 +174,19 @@ const AttendancePanel = () => {
             try {
                 const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/get-schedule-times?schedule_id=${scheduleID}`);
                 const data = await res.json();
-
+                console.log('schedule times', data);
                 const startTime = new Date(data.start_time);
+                const startTimeAdjusted = subtractHours(startTime, 7);
                 const endTime = new Date(data.end_time);
+                const endTimeAdjusted = subtractHours(endTime, 7);
                 const now = new Date();
-                const startMinus2Hours = new Date(startTime.getTime() - 2 * 60 * 60 * 1000);
-
-                const isInRange = now > startMinus2Hours && now < endTime;
-
+                const startMinus2Hours = new Date(startTimeAdjusted.getTime() - 2 * 60 * 60 * 1000);
+                console.log('startTime', startTime);
+                console.log('endTime', endTime);
+                console.log('startMinus2Hours', startMinus2Hours);
+                console.log('now', now);
+                const isInRange = now > startMinus2Hours && now < endTimeAdjusted;
+                console.log('isInRange', isInRange);
                 if (!isInRange) {
                     canvas.style.display = "none";
                     fallbackImg.style.display = "block";
