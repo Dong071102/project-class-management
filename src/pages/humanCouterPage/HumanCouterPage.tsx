@@ -37,8 +37,9 @@ const HumanCouterPanel = () => {
     const [isReconnecting, setIsReconnecting] = useState(false);
     const toast = useRef<Toast>(null);
     const [isFallback, setIsFallback] = useState(false);
+    const isInFallbackRef = useRef(false);
+    const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
 
-    let timeout: ReturnType<typeof setTimeout>;  // Khai báo timeout ở đây để có thể truy cập trong toàn bộ component
     // Fetch các lịch học có thể lựa chọn từ API
     useEffect(() => {
         const fetchAvailableDates = async () => {
@@ -53,8 +54,6 @@ const HumanCouterPanel = () => {
                 const data = await res.json();
 
                 if (!Array.isArray(data)) return;
-                console.log('schedule', data);
-
 
                 const formatted: ScheduleData[] = data.map(item => {
                     const utcDate = parseISO(item.start_time);
@@ -69,15 +68,14 @@ const HumanCouterPanel = () => {
                 });
 
                 const defaultSchedule: ScheduleData = {
-                    value: "0",  // Thay thế với schedule_id của lịch mới
-                    label: "Toàn bộ thời gian",  // Thay thế với thông tin của lịch mới
-                    schedule_id: "0",  // Thay thế với schedule_id của lịch mới
+                    value: "0",
+                    label: "Toàn bộ thời gian",
+                    schedule_id: "0",
                 };
 
-                setAvailableDates([defaultSchedule, ...formatted]); // Sắp xếp theo chiều ngược lại
-                console.log('availableDates', availableDates);
+                setAvailableDates([defaultSchedule, ...formatted]);
                 if (formatted.length > 0 || defaultSchedule) {
-                    setSelectedDate({ value: defaultSchedule.schedule_id, schedule_id: defaultSchedule.schedule_id }); // Đặt giá trị mặc định cho selectedDate
+                    setSelectedDate({ value: defaultSchedule.schedule_id, schedule_id: defaultSchedule.schedule_id });
                 }
             } catch (err) {
                 console.error("Lỗi khi lấy ngày điểm danh:", err);
@@ -96,40 +94,40 @@ const HumanCouterPanel = () => {
             setSelectedDate({ value: selected.value, schedule_id: selected.schedule_id });
         }
     };
-
     const captureScreenshot = () => {
-        const canvas = canvasRef.current; if (!canvas) return;
+        const ws = wsInstance;
+        if (!ws || !selectedDate) return;
 
-        const dataUrl = canvas.toDataURL("image/png");
-        const timestamp = format(new Date(), "HHmmss_ddMMyyyy");
-        const link = document.createElement("a");
-        link.href = dataUrl;
-        link.download = `snapshot_${timestamp}.png`;
-        link.click();
+        const schedule_id = selectedDate.schedule_id;
+
+        // Gửi yêu cầu chụp ảnh đến server qua WebSocket
+        ws.send(
+            JSON.stringify({
+                type: "snapshot_request",
+                schedule_id: schedule_id
+            })
+        );
+
+        // Tạm dừng video stream khi chụp ảnh
+        setIsStreaming(false);
     };
 
     // Fetch chi tiết điểm danh khi selectedDate thay đổi
     useEffect(() => {
         const fetchDetails = async () => {
             if (!selectedClass || !selectedDate || !currentUser) return;
+
             let url = `${import.meta.env.VITE_API_BASE_URL}/get-snapshot-details?lecturer_id=${currentUser.userId}`;
-            console.log('selectedDate', selectedDate)
             if (selectedClass.class_id !== '0') {
-                console.log('selectedClass.class_id', selectedClass.class_id)
                 url += `&class_id=${selectedClass.class_id}`;
             }
             if (selectedDate.schedule_id !== '0') {
-                console.log('selectedDate.schedule_id', selectedDate.schedule_id)
                 url += `&schedule_id=${selectedDate.schedule_id}`;
             }
-            console.log('selectedClass', selectedClass)
-            console.log('url attendance', url);
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
-
-                console.log('attendanceDetails', data);
 
                 if (!Array.isArray(data) || data === null) {
                     setAttendanceDetails([]);
@@ -151,22 +149,28 @@ const HumanCouterPanel = () => {
                     ImageSrc: item.image_path && item.image_path !== ''
                         ? `${import.meta.env.VITE_API_BASE_URL}/human_couter/${item.image_path}`
                         : '',
-
                 }));
 
                 setAttendanceDetails(mappedData);
             } catch (err) {
                 console.error("Lỗi khi lấy dữ liệu điểm danh:", err);
-                setAttendanceDetails([]); // fallback nếu fetch lỗi
+                setAttendanceDetails([]);
             }
-
         };
 
         fetchDetails();
     }, [selectedClass, selectedDate, currentUser]);
 
 
+
+    const adjustTimeByHours = (date: Date, time: number): Date => {
+        // Trừ đi 7 giờ (7 * 60 * 60 * 1000 ms)
+        const adjustedDate = new Date(date.getTime() - time * 60 * 60 * 1000);
+        return adjustedDate;
+    }
+
     // WebSocket reconnect function
+
     useEffect(() => {
         const canvas = canvasRef.current;
         const fallbackImg = document.getElementById("fallback-image") as HTMLImageElement | null;
@@ -176,6 +180,7 @@ const HumanCouterPanel = () => {
             console.warn("Canvas hoặc fallback chưa render.");
             return;
         }
+
         if (!selectedDate || !selectedDate.schedule_id || selectedDate.schedule_id === "0") {
             toast.current?.show({
                 severity: "warn",
@@ -183,39 +188,34 @@ const HumanCouterPanel = () => {
                 detail: "Vui lòng chọn môn học và thời gian điểm danh để xem video.",
                 life: 3000,
             });
-            setIsFallback(true); // 👈 Cho fallback image hiển thị
+            setIsFallback(true);
             setIsStreaming(false);
             return;
         }
 
-
-
-
         let ws: WebSocket;
         let timeout: ReturnType<typeof setTimeout>;
-        let isInFallback = false;
-
         const showFallback = () => {
-            if (isInFallback) return;
-            isInFallback = true;
+            if (isInFallbackRef.current) return;
+            isInFallbackRef.current = true;
             canvas.style.display = "none";
             fallbackImg.style.display = "block";
             fallbackImg.src = noCameraImage;
             setIsFallback(true);
             setIsStreaming(false);
-
+            console.log("🔁 Show fallback");
         };
 
         const showCanvas = () => {
-            if (!isInFallback) {
-                return;
-            }
-            isInFallback = false;
+            if (!isWebSocketConnected) return;  // Chỉ hiển thị canvas nếu WebSocket đã kết nối
+
             canvas.style.display = "block";
             fallbackImg.style.display = "none";
             setIsFallback(false);
             setIsStreaming(true);
+            // console.log("🎥 Hiển thị canvas");
         };
+
 
         const resetTimeout = () => {
             clearTimeout(timeout);
@@ -227,22 +227,24 @@ const HumanCouterPanel = () => {
 
         const connect = async () => {
             try {
-                // 1. Kiểm tra thời gian học hợp lệ
                 const scheduleRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/get-schedule-times?schedule_id=${selectedDate.schedule_id}`);
                 const scheduleData = await scheduleRes.json();
 
                 const startTime = new Date(scheduleData.start_time);
+                const adjustStartTime = adjustTimeByHours(startTime, 7);
                 const endTime = new Date(scheduleData.end_time);
+                const adjustEndTime = adjustTimeByHours(endTime, 7);
                 const now = new Date();
-                const startMinus2Hours = new Date(startTime.getTime() - 2 * 60 * 60 * 1000);
 
-                const isInRange = now > startMinus2Hours && now < endTime;
-                if (!isInRange) {
-                    showFallback();
-                    return;
-                }
 
-                // 2. Lấy đường dẫn socket
+                const startMinus2Hours = adjustTimeByHours(adjustStartTime, 2);
+
+                // const isInRange = now > startMinus2Hours && now < adjustEndTime;
+                // if (!isInRange) {
+                //     showFallback();
+                //     return;
+                // }
+
                 const socketRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/get-human-couter-socket-path?schedule_id=${selectedDate.schedule_id}`);
                 const socketData = await socketRes.json();
 
@@ -252,36 +254,62 @@ const HumanCouterPanel = () => {
                     return;
                 }
 
-                // 3. Kết nối WebSocket
-                // ws = new WebSocket(`ws://localhost:8000/human_couter/${socketData.socket_path}`);
-                ws = new WebSocket(`ws://localhost:8000/human_couter/${socketData.socket_path}`);
+                ws = new WebSocket(`ws://localhost:8000/human_couter/1`);
                 setWsInstance(ws);
 
                 ws.onopen = () => {
-                    console.log("✅ WebSocket đã kết nối");
+                    console.log("✅ WebSocket đã kết nối==");
+                    setIsWebSocketConnected(true);  // Set WebSocket connected
                     resetTimeout();
-                    setIsReconnecting(false); // ✅ kết nối thành công
+                    showCanvas();
+                    console.log("WebSocket đã kết nối thành công và show canva");
+                    setIsReconnecting(false);
                 };
 
                 ws.onmessage = (event) => {
                     try {
                         const message = JSON.parse(event.data);
 
-                        if (message.type === "video_frame" && message.frame) {
-                            showCanvas();
-                            resetTimeout();
+                        if (message.type === "snapshot_response") {
+                            // Khi nhận được phản hồi từ server về snapshot
+                            const { message: responseMessage, filename, num_people, image_base64 } = message;
 
+                            // Hiển thị thông báo thành công
+                            toast.current?.show({
+                                severity: "success",
+                                summary: "Chụp ảnh thành công",
+                                detail: responseMessage,
+                                life: 3000,
+                            });
+
+                            // // Cập nhật ảnh đã chụp
+                            // setSelectedImage({
+                            //     src: `data:image/jpeg;base64,${image_base64}`,
+                            //     caption: `Số người: ${num_people}`
+                            // });
+
+                            // Tiếp tục stream sau khi chụp ảnh
+                            setIsStreaming(true); // Đảm bảo rằng streaming tiếp tục
+                        }
+                        // console.log('message,', mess / age)
+                        if (message.type === "video_frame" && message.frame) {
+                            resetTimeout();
                             const img = new Image();
                             img.onload = () => {
-                                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                if (canvas && ctx) {
+                                    ctx.imageSmoothingEnabled = true;
+                                    ctx.imageSmoothingQuality = "high"; // Cài đặt chất lượng làm mịn cao
+                                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                                    // console.log("img.width", img.width, "img.height", img.height);
+                                    // console.log("canvas.width", canvas.width, "canvas.height", canvas.height);
+                                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                    // console.log("✅ Vẽ ảnh lên canvas thành công", img);
+                                    showCanvas();
+                                    // setSelectedImage(null); // nếu đang ở chế độ ảnh tĩnh thì reset
+                                }
+
                             };
                             img.src = `data:image/jpeg;base64,${message.frame}`;
-                        }
-
-                        else if (message.type === "snapshot_response") {
-                            alert(`📸 Snapshot saved: ${message.filename}\n👤 People: ${message.num_people}`);
-                            // (Tùy chọn) xử lý thêm nếu có image_base64
                         }
                     } catch (err) {
                         console.error("❌ Lỗi khi xử lý WebSocket:", err);
@@ -297,13 +325,14 @@ const HumanCouterPanel = () => {
                         life: 3000,
                     });
                     showFallback();
-                    setIsReconnecting(false); // ✅ kết nối thất bại
+                    setIsReconnecting(false);
                 };
 
                 ws.onclose = () => {
                     console.warn("WebSocket bị đóng");
                     showFallback();
                 };
+
             } catch (err) {
                 console.error("❌ Lỗi khi connect:", err);
                 showFallback();
@@ -317,20 +346,24 @@ const HumanCouterPanel = () => {
             ws?.close();
         };
     }, [currentUser, selectedClass, selectedDate, reconnectFlag]);
-
-    // Khi người dùng chọn một card ảnh, thay đổi fallback-image hiển thị
     useEffect(() => {
-        const canvas = document.getElementById("video-canvas") as HTMLCanvasElement | null;
+        const canvas = canvasRef.current;
         const fallbackImg = document.getElementById("fallback-image") as HTMLImageElement | null;
 
         if (!canvas || !fallbackImg) return;
 
+        // Nếu có selectedImage, ẩn canvas và hiển thị hình ảnh đã chọn
         if (selectedImage) {
             canvas.style.display = "none";
             fallbackImg.style.display = "block";
-            fallbackImg.src = selectedImage.src; // cập nhật ảnh mới
+            fallbackImg.src = selectedImage.src; // Cập nhật fallback image với hình ảnh đã chọn
+        } else {
+            // Nếu không có selectedImage, hiển thị lại canvas
+            canvas.style.display = "block";
+            fallbackImg.style.display = "none";
         }
-    }, [selectedImage]);
+    }, [selectedImage]);  // Chạy lại khi selectedImage thay đổi
+
 
     // Gọi hàm connectWebSocket trong useEffect để kết nối WebSocket khi lần đầu tiên render
 
@@ -351,8 +384,8 @@ const HumanCouterPanel = () => {
                         {/* Canvas (streaming) */}
                         <canvas
                             ref={canvasRef}
-                            width={960}
-                            height={540}
+                            width={765}
+                            height={430}
                             style={{ border: "1px solid black", display: "block", marginBottom: "10px" }}
                         />
 
@@ -372,8 +405,6 @@ const HumanCouterPanel = () => {
                             onClick={() => setIsFullscreen(true)}
                         />
 
-
-                        {/* Góc dưới bên trái */}
                         <p className="absolute bottom-2 left-2 bg-gray-400 text-white text-sm px-2 py-1 rounded-md shadow z-10">
                             {isStreaming ? "Streaming điểm danh" : selectedImage ? "Hình ảnh đã chọn" : "Không có kết nối"}
                         </p>
