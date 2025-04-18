@@ -20,6 +20,7 @@ import HerdsReport from './pages/herds/HerdsReport';
 import EpidemicReport from './pages/epidemic/EpidemicReport';
 import TreatmentPlan from './pages/epidemic/TreatmentPlan';
 import TrackRecord from './pages/epidemic/TrackRecord';
+import { PiChartLineFill } from "react-icons/pi";
 import ResourcesReport from './pages/resources/ResourcesReport';
 import Water from './pages/resources/Water';
 import Food from './pages/resources/Food';
@@ -40,6 +41,7 @@ import StudentsBasicTable from './components/classStudentTable/classStudent';
 import WeeklyScheduler from './pages/Scheduler/Scheduler';
 import AttendanceStream from './pages/attendancePage/attendanceStream';
 import HumanCouterPanel from './pages/humanCouterPage/HumanCouterPage';
+import ReportPage from './pages/report/ReportPage';
 const queryClient = new QueryClient();
 const SIDEBAR_ITEMS = [
   { text: "Tổng quan", url: "/dashboard", icon: <HiMiniChartPie /> },
@@ -65,6 +67,11 @@ const SIDEBAR_ITEMS = [
       { text: "Điểm danh", url: "/camera/attendance" },
       { text: "Giám sát", url: "/camera/recognition" },
     ],
+  },
+  {
+    text: "Báo cáo/thống kê",
+    url: "/report",
+    icon: <PiChartLineFill />,
   },
 
 ];
@@ -155,8 +162,8 @@ function App() {
 
         },
         {
-          path: "/epidemic/report",
-          element: <EpidemicReport />,
+          path: "/report",
+          element: <ReportPage />,
         },
         {
           path: "/resources/water",

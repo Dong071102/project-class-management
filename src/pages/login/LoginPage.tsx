@@ -110,20 +110,20 @@ const LoginPage: React.FC = () => {
                 {loading ? "Đang xử lý..." : "Đăng nhập"}
               </button>
 
-              <div className="flex items-center w-full my-4">
+              {/* <div className="flex items-center w-full my-4">
                 <hr className="flex-1 border-t-2 border-[#CFDFE2]" />
                 <p className="mx-4 text-black whitespace-nowrap">Hoặc</p>
                 <hr className="flex-1 border-t-2 border-[#CFDFE2]" />
-              </div>
+              </div> */}
 
               {/* Đăng nhập bằng Google */}
-              <button
+              {/* <button
                 onClick={handleClick}
                 className="w-full p-3 rounded-[100px] bg-black text-white flex items-center justify-center gap-3 transition cursor-pointer"
               >
                 <FcGoogle className="w-5 h-5" />
                 <span className="text-base">Đăng nhập bằng Google</span>
-              </button>
+              </button> */}
             </form>
           </div>
         </div>

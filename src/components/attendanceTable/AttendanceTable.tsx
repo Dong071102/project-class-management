@@ -172,7 +172,7 @@ const AttendancePivotDataTable: React.FC = () => {
     const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
     const [globalFilter, setGlobalFilter] = useState<string>("");
     const dt = useRef<any>(null);
-    const { selectedClass } = useClassContext();
+    const { selectedClass, selectedSemester } = useClassContext();
     const { currentUser } = useContext(AuthContext);
     const toast = useRef<Toast>(null);
     const [submitted, setSubmitted] = useState<boolean>(false);
@@ -184,6 +184,10 @@ const AttendancePivotDataTable: React.FC = () => {
                 let url = `${import.meta.env.VITE_API_BASE_URL}/attendance-detail?lecturer_id=${currentUser?.userId}`;
                 if (selectedClass?.class_id !== "0") {
                     url += `&class_id=${selectedClass?.class_id}`;
+                }
+                if (selectedSemester?.semester_id !== "0") {
+                    console.log('selectedSemester?.semester_id', selectedSemester?.semester_id)
+                    url += `&semester_id=${selectedSemester?.semester_id}`;
                 }
                 console.log('url,url', url)
                 const response = await fetch(url);
@@ -202,7 +206,7 @@ const AttendancePivotDataTable: React.FC = () => {
         };
 
         fetchAttendanceDetails();
-    }, [selectedClass, currentUser]);
+    }, [selectedClass, currentUser, selectedSemester]);
     useEffect(() => {
         if (productDialog && product.id && pivotData.length > 0 && dates.length > 0) {
             const student = pivotData.find(p => p.id === product.id);

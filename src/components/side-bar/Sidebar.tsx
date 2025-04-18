@@ -35,23 +35,7 @@ export default function Sidebar({ children }: { children: ReactNode }) {
       <SidebarContext.Provider value={{ expanded }}>
         <ul className="flex-1 px-3">{children}</ul>
       </SidebarContext.Provider>
-
-      <div className="flex hidden md:block p-3 items-center">
-        <div className="relative flex flex-col items-center p-6 bg-black rounded-2xl shadow-lg max-w-xs mx-auto">
-          <div className="absolute -top-10 flex items-center justify-center w-20 h-20 rounded-full border-4 border-white bg-[#FFA500] shadow-md">
-
-          </div>
-
-          <div className="mt-10 text-center text-white">
-            <h3 className="font-bold text-lg">Đây là quảng cáo</h3>
-            <p className="mt-2 text-sm opacity-80">
-              Nạp vip để sinh viên DLU làm app có thể mượt hơn"</p></div>
-          <div className="absolute bottom-6 right-6 w-2 h-2 bg-yellow-400 rounded-full"></div>
-          <div className="absolute bottom-4 left-10 w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
-          <div className="absolute bottom-10 right-1 w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
-        </div>
-      </div>
-    </aside>
+    </aside >
   );
 }
 // Component SidebarItem

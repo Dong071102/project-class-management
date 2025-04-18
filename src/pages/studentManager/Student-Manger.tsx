@@ -120,7 +120,9 @@ export default function StudentManager() {
                     const transformed = (data as any[]).map(item => ({
                         ...item,
                         start_time: formatDateTime(item.start_time),
-                        attendance_time: formatDateTime(item.attendance_time)
+                        attendance_time: formatDateTime(item.attendance_time),
+                        evidence_image_url: (item.evidence_image_url && item.evidence_image_url !== '') ? `${import.meta.env.VITE_API_BASE_URL}/facial_recognition/${item.evidence_image_url}` : '',
+
                     }));
                     setAttendanceRecords(transformed as AttendanceRecord[]);
                 }
@@ -251,17 +253,45 @@ export default function StudentManager() {
             </React.Fragment>
         );
     };
+    const [imageDialogVisible, setImageDialogVisible] = useState<boolean>(false);
+    const [selectedImageUrl, setSelectedImageUrl] = useState<string>(''); // State to store selected image URL
+
+    // Function to open the modal and set the selected image URL
+    const showImageDialog = (imageUrl: string) => {
+        if (!imageUrl) {
+            toast.current?.show({
+                severity: 'warn',
+                summary: 'Cảnh báo',
+                detail: 'Không có ảnh nào để hiển thị',
+                life: 3000,
+            });
+            return;
+        }
+        console.log(imageUrl);
+        setSelectedImageUrl(imageUrl);
+        setImageDialogVisible(true);
+    };
+
 
     const attendanceActionBodyTemplate = (rowData: AttendanceRecord) => {
         return (
             <React.Fragment>
                 <div className="flex flex-wrap gap-2">
-                    {/* <FiEdit className="text-[#FCBD2D] cursor-pointer hover:text-amber-500" size={18} /> */}
-                    <FiImage className="text-[#3d6649] cursor-pointer hover:text-[#76bc6a]" size={18} />
+                    <FiImage
+                        className="text-[#3d6649] cursor-pointer hover:text-[#76bc6a]"
+                        size={18}
+                        onClick={() => showImageDialog(rowData.evidence_image_url)} // Open dialog when image is clicked
+                    />
                 </div>
             </React.Fragment>
         );
     };
+    // Modal to display the image
+    const imageDialogFooter = (
+        <React.Fragment>
+            <Button label="Đóng" icon="pi pi-times" onClick={() => setImageDialogVisible(false)} autoFocus />
+        </React.Fragment>
+    );
 
     const header = (
         <div className="flex flex-wrap lign-items-center justify-between">
@@ -283,7 +313,7 @@ export default function StudentManager() {
             <div className="text-left flex flex-wrap gap-4 items-center">
                 <Button
                     icon={<FiArrowLeft />}
-                    outlined
+                    // outlined
                     className="p-0 w-10 h-10 border-none"
                     onClick={backToStudentList}
                 />
@@ -415,10 +445,9 @@ export default function StudentManager() {
                                 <div className="p-4 mt-4 bg-[#F3F7F5] rounded-[20px]">
                                     <h3 className="mb-4 text-lg">Biểu đồ tỉ lệ đi học</h3>
                                     <PieChartComponent
-
                                         presentDays={selectedStudentDetail.presentDays ?? 0}
-                                        lateDatys={selectedStudentDetail.lateDatys ?? 0}
-                                        absentDatys={selectedStudentDetail.absentDatys ?? 0}
+                                        lateDays={selectedStudentDetail.lateDatys ?? 0}
+                                        absentDays={selectedStudentDetail.absentDatys ?? 0}
                                     />
                                 </div>
 
@@ -482,7 +511,17 @@ export default function StudentManager() {
                 )
             }
 
-
+            <Dialog
+                visible={imageDialogVisible}
+                style={{ width: '50vw' }}
+                header="Ảnh điểm danh"
+                modal
+                footer={imageDialogFooter}
+                onHide={() => setImageDialogVisible(false)}
+            >
+                <img src={selectedImageUrl} alt="Attendance" className="w-full" />
+            </Dialog>
         </div >
+
     );
 }

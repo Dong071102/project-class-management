@@ -11,8 +11,9 @@ import {
 import { useClassContext } from "../../contexts/classContext";
 import { AuthContext } from "../../hooks/user";
 
-interface AttendanceData {
-  period: string;
+interface CourseDataa {
+  course_id: string;
+  course_name: string;
   present: number;
   late: number;
   absent?: number;
@@ -20,84 +21,58 @@ interface AttendanceData {
 
 interface BarChartComponentProps {
   title: string;
-  filterType: "year" | "month" | "week";
   hasIsolation: boolean;
-  selectedYear: number;
-  selectedMonth: number | null;
-  selectedWeek: number | null;
+  selectedStartDate: Date | null;
+  selectedEndDate: Date | null;
+  selectedType?: string;
 }
 
 const BarChartComponent: React.FC<BarChartComponentProps> = ({
   title,
-  filterType,
   hasIsolation,
-  selectedYear,
-  selectedMonth,
-  selectedWeek,
+  selectedStartDate,
+  selectedEndDate,
+  selectedType
 }) => {
-  const [data, setData] = useState<AttendanceData[]>([]);
-  const { selectedClass, selectedSemester } = useClassContext();
+  const [data, setData] = useState<CourseDataa[]>([]);
   const { currentUser } = useContext(AuthContext);
 
   // Hàm tính tuần trong tháng dựa trên ngày hiện tại
-  const getWeekOfMonth = (date: Date): number => {
-    const day = date.getDate();
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-    return Math.ceil((day + firstDay) / 7);
-  };
+
 
   useEffect(() => {
     const fetchAttendanceData = async () => {
+
       try {
-        let defaultMonth: number | null = selectedMonth;
-        let defaultWeek: number | null = selectedWeek;
-
-        if (filterType === "week") {
-          // Nếu không có tháng được chọn, mặc định dùng tháng hiện tại
-          if (defaultMonth === null) {
-            defaultMonth = new Date().getMonth() + 1;
-          }
-          // Nếu không có tuần được chọn, mặc định lấy tuần hiện tại của tháng hiện tại
-          if (defaultWeek === null) {
-            defaultWeek = getWeekOfMonth(new Date());
-          }
-        } else if (filterType === "month") {
-          // Nếu filter là month và chưa chọn tháng, mặc định dùng tháng hiện tại
-          if (defaultMonth === null) {
-            defaultMonth = new Date().getMonth() + 1;
-          }
-        }
-
-        // Xây dựng query string với các tham số cần thiết
-        const params = new URLSearchParams({
-          filter: filterType,
-          year: String(selectedYear),
-        });
-        if (defaultMonth !== null) {
-          params.append("month", String(defaultMonth));
-        }
-        if (filterType === "week" && defaultWeek !== null) {
-          params.append("week", String(defaultWeek));
-        }
-        console.log('params_result', params.toString());
-        if (selectedClass && selectedClass.class_id !== '0') {
-          params.append("class_id", String(selectedClass.class_id));
-
-        }
-        if (selectedSemester && selectedSemester.semester_id !== '0') {
-          params.append("semester_id", String(selectedSemester.semester_id));
-        }
-
         // Giả sử API endpoint là /attendance-report
-        const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/attendance-report/${currentUser?.userId}?${params.toString()}`
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        let url = `${import.meta.env.VITE_API_BASE_URL}/get-courses-report?main_lecturer_id=${currentUser?.userId}`
+        if (selectedStartDate) {
+          console.log("start date", selectedStartDate);
+          const localDate = selectedStartDate.toLocaleDateString('vi-VN').split("/").reverse().join("-"); // YYYY-MM-DD
+          url += `&begin_day=${localDate}`;
         }
-        const result: AttendanceData[] = await response.json();
-        console.log("results results", result);
-        setData(result ?? []);
+        if (selectedEndDate) {
+          console.log("start date", selectedStartDate);
+          const localDate = selectedEndDate.toLocaleDateString('vi-VN').split("/").reverse().join("-"); // YYYY-MM-DD
+          url += `&end_day=${localDate}`;
+        }
+        if (selectedType == 'class') {
+          url += `&type=${selectedType}`;
+        }
+        console.log(url)
+        const response = await fetch(url);
+        const result: any[] = await response.json();
+        console.log("results report", result);
+
+        const mappedResult: CourseDataa[] = result.map(item => ({
+          course_id: item.course_id,
+          course_name: selectedType === 'class' ? `${item.class_name}-${item.course_name}` : item.course_name,
+          present: item.present,
+          late: item.late,
+          absent: item.absent, // `absent` có thể là undefined, nếu không có, nó sẽ không bị đưa vào
+        }));
+        console.log("results report", result);
+        setData(mappedResult ?? []);
       } catch (error) {
         console.error("Error fetching attendance data:", error);
         setData([]);
@@ -106,13 +81,11 @@ const BarChartComponent: React.FC<BarChartComponentProps> = ({
 
     fetchAttendanceData();
   }, [
-    filterType,
     hasIsolation,
-    selectedYear,
-    selectedMonth,
-    selectedWeek,
     currentUser,
-    selectedClass,
+    selectedStartDate,
+    selectedEndDate,
+    selectedType,
   ]);
 
   return (
@@ -121,7 +94,7 @@ const BarChartComponent: React.FC<BarChartComponentProps> = ({
       <ResponsiveContainer width="100%" height={400}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="period" tick={{ fill: "#555" }} />
+          <XAxis dataKey="course_name" tick={{ fill: "#555" }} />
           <YAxis tick={{ fill: "#555" }} />
           <Tooltip />
           <Bar
