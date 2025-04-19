@@ -5,6 +5,7 @@ import BarChartCourseReport from "../../components/bar-chart/BarChartCourseRepor
 import { Calendar } from "primereact/calendar";
 import { Dropdown } from "primereact/dropdown";
 import { Button } from "primereact/button";
+import { MdFilterAltOff } from "react-icons/md";
 
 interface typesOption {
     label: string;
@@ -35,7 +36,6 @@ const CourseChartReport = () => {
                             onChange={(e) => setSelectedStartDate(e.value as Date)}
                             dateFormat="dd/mm/yy"
                             placeholder="Ngày bắt đầu"
-                            required
                         />
 
                     </div>
@@ -46,8 +46,7 @@ const CourseChartReport = () => {
                             value={selectedEndDate}
                             onChange={(e) => setSelectedEndDate(e.value as Date)}
                             dateFormat="dd/mm/yy"
-                            placeholder="Ngày bắt đầu"
-                            required
+                            placeholder="Ngày kết thúc"
                         />
 
                     </div>
@@ -63,17 +62,22 @@ const CourseChartReport = () => {
                             placeholder="Lọc theo"
                         />
                     </div>
-                    <div className="field w-[120px]">
 
-                        <Button
-                            label="Xóa lọc"
+                    <div className="flex gap-5 pl-5">
+                        <div
+                            className="flex gap-1 p-2 rounded-[6px] items-center justify-between  bg-[#ffdf20] cursor-pointer hover:bg-[#f0b100]"
+
                             onClick={() => {
                                 console.log('selectedType', selectedType)
                                 setSelectedStartDate(null);
                                 setSelectedEndDate(null);
                                 setSelectedType("course");
                             }}
-                        />
+                        >
+                            <p className="text-base font-normal">Xóa lọc</p>
+                            <MdFilterAltOff size={18} />
+
+                        </div>
                     </div>
                 </div>
             </div>

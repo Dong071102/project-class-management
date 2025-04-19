@@ -6,8 +6,7 @@ import 'primereact/resources/primereact.css';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 
 import { HiMiniChartPie } from "react-icons/hi2";
-import { MdOutlinePets, MdSick, MdAssignment } from "react-icons/md";
-import { BiSolidBarChartSquare, BiSolidCctv } from "react-icons/bi";
+import { BiSolidCctv } from "react-icons/bi";
 
 import Sidebar, { SidebarItem } from "./components/side-bar/Sidebar";
 import Header from "./components/header/Header";
