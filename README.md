@@ -3,9 +3,12 @@
 Đây là giao diện quản lý dành riêng cho **giảng viên** trong hệ thống **Class Manager System**, giúp giảng viên theo dõi, quản lý lịch dạy, điểm danh và sinh viên trong lớp một cách dễ dàng, trực quan và real-time.
 
 Để có thể hoạt động được ứng dụng vui lòng cài đặt các services backend phụ thuộc:
-
-(🔐 Auth CMS Backend)[https://github.com/Dong071102/cms-auth-API-service] là một dịch vụ xác thực và phân quyền người dùng được xây dựng bằng Golang + Echo, phục vụ cho hệ thống quản lý lớp học thông minh. Hệ thống cung cấp các tính năng quản lý tài khoản, xác thực JWT, phân quyền theo vai trò (role-based access control), và khôi phục mật khẩu.
-
+- (🔐 Auth CMS Backend)[https://github.com/Dong071102/cms-auth-API-service] là một dịch vụ xác thực và phân quyền người dùng được xây dựng bằng Golang + Echo, phục vụ cho hệ thống quản lý lớp học thông minh. Hệ thống cung cấp các tính năng quản lý tài khoản, xác thực JWT, phân quyền theo vai trò (role-based access control), và khôi phục mật khẩu.
+- (📚 CMS Backend Services)[https://github.com/Dong071102/manager-cms-API-service] là hệ thống API được viết bằng Golang (Echo framework), phục vụ cho ứng dụng quản lý điểm danh sinh viên, lớp học, giảng viên và camera AI.
+- (🖼️ Image Handle Services CMS)[https://github.com/Dong071102/image-handle-server-cms-service] là một dịch vụ đơn giản sử dụng Node.js + Express để phục vụ ảnh tĩnh được sinh ra bởi hệ thống nhận diện khuôn mặt (Face Recognition) và hệ thống đếm người (Human Counter). Dịch vụ giúp client có thể truy cập các ảnh snapshot đã lưu thông qua HTTP.
+- (😳 Facial recognition service)[https://github.com/Dong071102/facial-recognition-cms-AI-service/tree/main] là một dịch vụ điểm danh thông minh bằng cách nhận diện khuôn mặt thời gian thực qua camera IP hoặc webcam, sử dụng MCTNN + MobileFaceNet.
+- (👀 Human Counter CMS)[https://github.com/Dong071102/human-couter-cms-AI-service] là một dịch vụ sử dụng mô hình YOLO và OpenCV để đếm số lượng người trong thời gian thực từ camera IP hoặc video file. Hệ thống được triển khai thông qua WebSocket server và có thể chụp ảnh bằng yêu cầu từ client.
+- (📥 CMS DB)[https://github.com/Dong071102/CMS_DB] và đừng quên import cơ sở dữ liệu cho hệ thống
 ---
 
 ## 🚀 Tính năng chính cho giảng viên

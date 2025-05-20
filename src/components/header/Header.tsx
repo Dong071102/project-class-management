@@ -4,17 +4,14 @@ import IconNo from "../../assets/IconNotification.png"
 import { AuthContext } from "../../hooks/user"
 import ClassSelector from "../classSelector/ClassSelector"
 
-import { MdHomeWork } from "react-icons/md";
 import { oneClass } from "../../contexts/classContext"
 const Header = () => {
-  const handleClassSelect = (id: string) => {
-    console.log("Selected Farm ID:", id);
-  };
+
   const [classes, setClasses] = useState<oneClass[]>([]);
   useEffect(() => {
     const fetchClass = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/classes/${currentUser?.userId}`);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/classes/${currentUser?.userId}`);
         const data: oneClass[] = await response.json();
         console.log('data', data)
         setClasses(data);

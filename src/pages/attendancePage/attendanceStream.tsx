@@ -3,7 +3,7 @@ import AbnormalDetectionCard, { AttendanceCard } from "../../components/card/Att
 import fallbackImage from "../../assets/no-attendance-image.png";
 import noCameraImage from "../../assets/nocamera.svg";
 import { Dropdown } from "primereact/dropdown";
-import { format, parse, parseISO, subHours } from "date-fns";
+import { format, parseISO, subHours } from "date-fns";
 import AttendanceTable from "../../components/attendanceTable/AttendanceTable";
 import { useClassContext } from "../../contexts/classContext";
 import { AuthContext } from "../../hooks/user";
@@ -208,8 +208,8 @@ const AttendancePanel = () => {
         }
 
         // Nếu hợp lệ mới tiếp tục kết nối WebSocket
-        const ws = new WebSocket(`ws://localhost:8000/ws/${data.socket_path}`);
-        console.log(`ws://localhost:8000/ws/${data.socket_path}`);
+        const ws = new WebSocket(`${import.meta.env.VITE_API_BASE_URL}/ws/${data.socket_path}`);
+        console.log(`${import.meta.env.VITE_API_BASE_URL}/ws/${data.socket_path}`);
         const showFallback = () => {
             canvas.style.display = "none";
             fallbackImg.style.display = "block";

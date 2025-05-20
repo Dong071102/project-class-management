@@ -756,7 +756,7 @@ const AttendanceReportPivotDataTable: React.FC = () => {
                         value={selectedEndDate}
                         onChange={(e) => setSelectedEndDate(e.value as Date)}
                         dateFormat="dd/mm/yy"
-                        placeholder="Ngày bắt đầu"
+                        placeholder="Ngày kết thúc"
                     />
 
                 </div>

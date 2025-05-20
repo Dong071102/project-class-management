@@ -63,7 +63,7 @@ const StudentStatistics: React.FC = () => {
     const fetchAttendanceSummary = async () => {
       try {
 
-        let url = `http://localhost:8000/attendance-summary?lecturer_id=${currentUser?.userId}`;
+        let url = `${import.meta.env.VITE_API_BASE_URL}/attendance-summary?lecturer_id=${currentUser?.userId}`;
 
         if (selectedClass?.class_id !== '0') {
 

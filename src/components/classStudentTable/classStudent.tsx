@@ -37,7 +37,6 @@ const headerMapping: Record<string, string> = {
     status: "Trạng thái"
 };
 
-const reverseHeaderMapping = Object.fromEntries(Object.entries(headerMapping).map(([k, v]) => [v, k]));
 
 const StudentsBasicTable: React.FC = () => {
     const [students, setStudents] = useState<DisplayStudent[]>([]);

@@ -47,5 +47,5 @@
     "typescript-eslint": "^8.18.2",
     "vite": "^6.0.5"
   },
-  "proxy": "https://agriculture-traceability.vercel.app/api/v1/"
+  "proxy": "http://localhost:8000"
 }

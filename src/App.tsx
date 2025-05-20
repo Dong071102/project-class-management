@@ -11,36 +11,19 @@ import { BiSolidCctv } from "react-icons/bi";
 import Sidebar, { SidebarItem } from "./components/side-bar/Sidebar";
 import Header from "./components/header/Header";
 import Breadcrumb_Comp from "./components/breadcrumb/Breadcrumb_Comp";
-import LoginPage from "./pages/login/LoginPage";
-import Dashboard from './pages/dashboard/DashboardPage';
-import Herds from './pages/herds/Herds';
-import AbnormalDetection from './pages/herds/AbnormalDetection';
-import HerdsReport from './pages/herds/HerdsReport';
-import EpidemicReport from './pages/epidemic/EpidemicReport';
-import TreatmentPlan from './pages/epidemic/TreatmentPlan';
-import TrackRecord from './pages/epidemic/TrackRecord';
+import LoginPage from "./pages/loginPage/LoginPage";
+import Dashboard from './pages/dashboardPage/DashboardPage';
 import { PiChartLineFill } from "react-icons/pi";
-import ResourcesReport from './pages/resources/ResourcesReport';
-import Water from './pages/resources/Water';
-import Food from './pages/resources/Food';
-import Medical from './pages/resources/Medical';
-import JobManage from './pages/job/JobManage';
-import JobReport from './pages/job/JobReport';
 import { AuthContext } from './hooks/user';
-import Categories from './pages/prev-pages/categories/Categories';
-import OldHerds from './pages/prev-pages/herds/Herds';
-import Records from './pages/prev-pages/herds/Records';
-import Diseases from './pages/prev-pages/diseases/Diseases';
-import Treatments from './pages/prev-pages/treatments/Treatments';
 import { NotificationProvider } from "./contexts/NotificationContext";
 import NotificationContainer from "./components/NotificationContainer";
 import { FaBookOpenReader, FaCalendarDays } from 'react-icons/fa6';
-import StudentManager from './pages/studentManager/Student-Manger';
+import StudentManager from './pages/studentManagerPage/Student-Manger';
 import StudentsBasicTable from './components/classStudentTable/classStudent';
-import WeeklyScheduler from './pages/Scheduler/Scheduler';
+import WeeklyScheduler from './pages/SchedulerPage/Scheduler';
 import AttendanceStream from './pages/attendancePage/attendanceStream';
 import HumanCouterPanel from './pages/humanCouterPage/HumanCouterPage';
-import ReportPage from './pages/report/ReportPage';
+import ReportPage from './pages/reportPage/ReportPage';
 const queryClient = new QueryClient();
 const SIDEBAR_ITEMS = [
   { text: "Tổng quan", url: "/dashboard", icon: <HiMiniChartPie /> },
@@ -164,54 +147,7 @@ function App() {
           path: "/report",
           element: <ReportPage />,
         },
-        {
-          path: "/resources/water",
-          element: <Water />,
-        },
-        {
-          path: "/resources/food",
-          element: <Food />,
-        },
-        {
-          path: "/resources/medical",
-          element: <Medical />,
-        },
-        {
-          path: "/resources/report",
-          element: <ResourcesReport />,
-        },
-        {
-          path: "/job/manage",
-          element: <JobManage />,
-        },
-        {
-          path: "/job/report",
-          element: <JobReport />,
-        },
-        {
-          path: "/admin/categories",
-          element: <Categories />,
-        },
-        {
-          path: "/admin/diseases",
-          element: <Diseases />,
-        },
-        {
-          path: "/admin/treatments",
-          element: <Treatments />,
-        },
-        {
-          path: "/admin/old-herds",
-          element: <OldHerds />,
-        },
-        {
-          path: "/herds/:id",
-          element: <Records />,
-        },
-        {
-          path: "/detection",
-          element: <Records />,
-        },
+
       ],
     },
   ]);

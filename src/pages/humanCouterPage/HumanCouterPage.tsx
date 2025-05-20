@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import fallbackImage from "../../assets/no-attendance-image.png";
 import noCameraImage from "../../assets/nocamera.svg";
 import { Dropdown } from "primereact/dropdown";
-import { format, parse, parseISO, subHours } from "date-fns";
+import { format, parseISO, subHours } from "date-fns";
 import AttendanceTable from "../../components/attendanceTable/AttendanceTable";
 import { useClassContext } from "../../contexts/classContext";
 import { AuthContext } from "../../hooks/user";
@@ -203,7 +203,7 @@ const HumanCouterPanel = () => {
             fallbackImg.src = noCameraImage;
             setIsFallback(true);
             setIsStreaming(false);
-            console.log("🔁 Show fallback");
+            console.log("Show fallback");
         };
 
         const showCanvas = () => {
@@ -249,16 +249,16 @@ const HumanCouterPanel = () => {
                 const socketData = await socketRes.json();
 
                 if (!socketData.socket_path) {
-                    console.log("❌ Không có socket path");
+                    console.log("Không có socket path");
                     showFallback();
                     return;
                 }
 
-                ws = new WebSocket(`ws://localhost:8000/human_couter/1`);
+                ws = new WebSocket(`ws://localhost:8005/human_couter/1`);
                 setWsInstance(ws);
 
                 ws.onopen = () => {
-                    console.log("✅ WebSocket đã kết nối==");
+                    console.log("WebSocket đã kết nối==");
                     setIsWebSocketConnected(true);  // Set WebSocket connected
                     resetTimeout();
                     showCanvas();
@@ -312,7 +312,7 @@ const HumanCouterPanel = () => {
                             img.src = `data:image/jpeg;base64,${message.frame}`;
                         }
                     } catch (err) {
-                        console.error("❌ Lỗi khi xử lý WebSocket:", err);
+                        console.error("Lỗi khi xử lý WebSocket:", err);
                     }
                 };
 
@@ -334,7 +334,7 @@ const HumanCouterPanel = () => {
                 };
 
             } catch (err) {
-                console.error("❌ Lỗi khi connect:", err);
+                console.error("Lỗi khi connect:", err);
                 showFallback();
             }
         };
@@ -426,7 +426,7 @@ const HumanCouterPanel = () => {
                                         });
                                         return;
                                     }
-                                    console.log("🔁 Reconnecting WebSocket...");
+                                    console.log("Reconnecting WebSocket...");
                                     setIsReconnecting(true); // 👉 show loading
                                     setReconnectFlag(prev => prev + 1);
                                 }

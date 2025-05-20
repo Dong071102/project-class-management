@@ -70,8 +70,13 @@ export const AuthContextProvider: React.FC<AuthProviderProps> = ({ children }) =
 
   // Hàm đăng nhập
   const loginApi = async (inputs: { username_or_email: string; password: string }) => {
+    console.log(inputs)
+
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, inputs);
+      // console.log(inputs)
+      console.log(`${import.meta.env.VITE_API_BASE_URL}/auth/login`)
+      // const res = await axios.post(`http://localhost:8005/auth/login`, inputs);
       const newAccessToken: string = res.data.access_token;
       const refreshToken: string = res.data.refresh_token;
       const decodedAccessToken = decodedToken(newAccessToken);
